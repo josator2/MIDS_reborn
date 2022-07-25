@@ -1,4 +1,4 @@
-from general_radiology_procedure import GeneralRadiologyProcedures
+
 from abc import ABC, abstractmethod
 
 

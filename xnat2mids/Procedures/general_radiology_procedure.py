@@ -14,6 +14,7 @@ class GeneralRadiologyProcedures(Procedures):
             "cr": {k: 1 for k in self.view_positions_2d},
             "dx": {k: 1 for k in self.view_positions_2d},
             "ct": {k: 1 for k in self.view_positions_3d},
+            # not defined yet
             "bmd": {None: 1},
             "xa": {None: 1},
             "io": {None: 1},
@@ -29,9 +30,9 @@ class GeneralRadiologyProcedures(Procedures):
             "ds": {None: 1},
         }
 
-    def cr_procedure(
+    def procedure(
             self, department_id, subject_id, session_id, body_part,
-            iop):
+            view_position, dicom_modality):
         """
             Function that copies the elements to the CR images of
             the mids.
@@ -46,12 +47,12 @@ class GeneralRadiologyProcedures(Procedures):
                 subject_id=subject_id,
                 session_id=session_id,
                 acq_index=acq_index,
-                run_index=str(self.dict_indexes[scan][iop]),
+                run_index=str(self.dict_indexes[scan][view_position]),
                 len_nifti_files=len_nifti_files,
                 body_part=body_part,
                 view_position=view_position,
-                scan="cr",
-                ext=".png"
+                scan=dicom_modality,
+                ext=".nii.gz" if dicom_modality=="cr" else ".png"
             )
             # copy the nifti file in the new path
             copyfile(nifti_file, str(new_path_mids.joinpath(nii_name))

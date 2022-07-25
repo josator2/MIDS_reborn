@@ -12,10 +12,10 @@ from shutil import copyfile
 import progressbar
 import pydicom
 import requests
-from lib.variables import dict_path
-from lib.variables import dict_uri
-from lib.variables import format_message
-from lib.variables import reset_terminal
+from variables import dict_path
+from variables import dict_uri
+from variables import format_message
+from variables import reset_terminal
 
 
 def try_to_request(interface, web, level_verbose=15, level_tab=15):
@@ -517,9 +517,6 @@ class resources(dict):
         for row in reader:
             self.dict_resources[row["Name"]] = dict(**row)
         output.close()
-
-    def download_snapshot(self):
-        pass
 
     def download_dicom(self, path_download, filename, overwrite=False, verbose=False):
 
