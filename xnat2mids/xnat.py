@@ -12,10 +12,51 @@ from shutil import copyfile
 import progressbar
 import pydicom
 import requests
-from variables import dict_path
-from variables import dict_uri
+from variables import dict_paths
+from variables import dict_uris
 from variables import format_message
 from variables import reset_terminal
+
+###############################################################################
+# Functions
+###############################################################################
+def list_directory_xnat(project_list):
+    project_list.sort()
+    loop = True
+    project_names = [path_.split(os.sep)[-1] for path_ in project_list]
+    while loop:
+        for i, project_item in enumerate(project_names):
+            if not i % 5:
+                print((""))
+            string = str(i + 1) + ") " + project_item
+            print("{0:20s}".format(string), end=" ", flush=True)
+        answer = input("\nChoose the project: ")
+        answer = str(answer)
+        answer_list = []
+        answer_list_aux = answer.split(' ')
+
+        for ans in answer_list_aux:
+            if ans.isdigit():
+                ans = int(ans) - 1
+                if ans >= len(project_names):
+                    print("the number " + ans + " is not corrected, try again", flush=True)
+                    break
+                else:
+                    answer_list.append(project_names[ans])
+            else:
+                if not (any([ans in path_ for path_ in project_names])):
+                    if ans == "exit":
+                        exit(1)
+                    else:
+                        print("the project " + ans
+                              + " is not corrected, try again")
+                        break
+                else:
+                    answer_list.append(ans)
+        else:
+            loop = False
+
+    return answer_list
 
 
 def try_to_request(interface, web, level_verbose=15, level_tab=15):
@@ -81,11 +122,11 @@ class Xnat_Session():
 
     def get_projects(self, verbose):
         output = StringIO()
-        if verbose: print(self.url_xnat + dict_uri["projects"], flush=True)
+        if verbose: print(self.url_xnat + dict_uris["projects"], flush=True)
         output.write(
             try_to_request(
                 self.interface, self.url_xnat
-                                + dict_uri["projects"],
+                                + dict_uris["projects"],
                 self.level_verbose,
                 self.level_tab
             ).text
@@ -105,38 +146,40 @@ class Xnat_Session():
         NOT IN USE, NEXT UPLOAD
         """
         project_list = [key for key, _ in self.dict_projects.items()]
-        project_list.sort()
-        loop = True
-        while loop:
-            for i, project_item in enumerate(project_list):
-                if not i % 5:
-                    print((""))
-                string = str(i + 1) + ") " + project_item
-                print("{0:20s}".format(string), end=" ", flush=True)
-            answer = input("\nChoose the project: ")
-            answer = str(answer)
-            answer_list = []
-            answer_list_aux = answer.split(' ')
-            for ans in answer_list_aux:
-                if ans.isdigit():
-                    ans = int(ans) - 1
-                    if ans >= len(project_list):
-                        print("the number " + ans + " is not corrected, try again", flush=True)
-                        break
-                    else:
-                        answer_list.append(project_list[ans])
-                else:
-                    if not (ans in project_list):
-                        if ans == "exit":
-                            exit(1)
-                        else:
-                            print("the proyect " + ans
-                                  + " is not corrected, try again")
-                            break
-                    else:
-                        answer_list.append(ans)
-            else:
-                loop = False
+        answer_list = list_directory_xnat(project_list)
+
+        # project_list.sort()
+        # loop = True
+        # while loop:
+        #     for i, project_item in enumerate(project_list):
+        #         if not i % 5:
+        #             print((""))
+        #         string = str(i + 1) + ") " + project_item
+        #         print("{0:20s}".format(string), end=" ", flush=True)
+        #     answer = input("\nChoose the project: ")
+        #     answer = str(answer)
+        #     answer_list = []
+        #     answer_list_aux = answer.split(' ')
+        #     for ans in answer_list_aux:
+        #         if ans.isdigit():
+        #             ans = int(ans) - 1
+        #             if ans >= len(project_list):
+        #                 print("the number " + ans + " is not corrected, try again", flush=True)
+        #                 break
+        #             else:
+        #                 answer_list.append(project_list[ans])
+        #         else:
+        #             if not (ans in project_list):
+        #                 if ans == "exit":
+        #                     exit(1)
+        #                 else:
+        #                     print("the proyect " + ans
+        #                           + " is not corrected, try again")
+        #                     break
+        #             else:
+        #                 answer_list.append(ans)
+        #     else:
+        #         loop = False
         if verbose: print("list of projects to download: {}".format(", ".join(answer_list)), flush=True)
         return answer_list
 
@@ -186,7 +229,7 @@ class Project(dict):
         if verbose:
             print(format_message(self.level_verbose, self.level_tab, "Project: {}".format(self["ID"])), flush=True)
         output.write(try_to_request(self.interface, self.url_xnat
-                                    + dict_uri["subjects"](self["ID"])
+                                    + dict_uris["subjects"](self["ID"])
                                     ).text)
         output.seek(0)
         reader = csv.DictReader(output)
@@ -239,7 +282,7 @@ class Subject(dict):
             try_to_request(
                 self["project"].interface,
                 self["project"].url_xnat
-                + dict_uri["experiments"](self["project"]["ID"], self["ID"])
+                + dict_uris["experiments"](self["project"]["ID"], self["ID"])
             ).text
         )
         output.seek(0)
@@ -265,6 +308,11 @@ class Subject(dict):
 
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
 
+
+class Resource(dict):
+    pass
+
+
 class Session(dict):
     def __init__(self, subject, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
@@ -280,7 +328,7 @@ class Session(dict):
             try_to_request(
                 self["subject"]["project"].interface,
                 self["subject"]["project"].url_xnat
-                + dict_uri["scans"](
+                + dict_uris["scans"](
                     self["subject"]["project"]["ID"],
                     self["subject"]["ID"],
                     self["ID"])
@@ -300,16 +348,15 @@ class Session(dict):
             except KeyError:
                 continue
         output.close()
-
-    def get_list_struct_report(
-            self, path_download, bool_list_resources, overwrite=False, verbose=False
-    ):
+    def get_list_resources(self, path_download, overwrite=False, verbose=False):
         output = StringIO()
+        if verbose: print(
+            format_message(self.level_verbose, self.level_tab, f"Session: {self['ID']}"), flush=True)
         output.write(
             try_to_request(
                 self["subject"]["project"].interface,
                 self["subject"]["project"].url_xnat
-                + dict_uri["struct_reports"](
+                + dict_uris["scans"](
                     self["subject"]["project"]["ID"],
                     self["subject"]["ID"],
                     self["ID"])
@@ -317,59 +364,87 @@ class Session(dict):
         )
         output.seek(0)
         reader = csv.DictReader(output)
-
-        if verbose:
-            print(format_message(self.level_verbose, self.level_tab, f"Session SR:  {self['ID']}"), flush=True)
+        self.dict_scans = dict()
         for row in reader:
-            # id_session=re.search(r'\d+', row["Name"]).group(0)
+            # print(format_message(16, 5, ""))
+            # print(row)
+            # If the "xsiType" key of the session is not equal to
+            # "xnat: mrSessionData", this may not work in this point.
             try:
-                id_session = re.search(r'sr.*', row["Name"]).group(0)
-            except KeyError as e:
-                print("\033[20;0H\u001b[0K", end="", flush=True)
-                print(row)
-                print(self["subject"]["project"]["ID"],
-                      self["subject"]["ID"],
-                      self["ID"])
-                return
-            self.download_struct_report(
-                path_download, row["Name"], overwrite=overwrite, verbose=verbose
-            )
+                self.dict_scans[row["ID"]] = Resource(self, self.level_verbose + 1, self.level_tab + 1, **row)
+
+            except KeyError:
+                continue
         output.close()
-
-    def download_struct_report(self, path_download, filename, overwrite=False, verbose=False):
-
-        complet_path = (
-            os.path.join(
-                path_download,
-                dict_path["path_sr"](
-                    self["subject"]["ID"],
-                    self["ID"]
-                )
-            )
-        )
-        sr_path = os.path.join(complet_path, filename)
-        if not overwrite and os.path.exists(sr_path):
-            print("Structural Report exists", flush=True)
-            return
-        os.makedirs(complet_path, exist_ok=True)
-        url_sr = (self["subject"]["project"].url_xnat
-                  + dict_uri["struct_reports"](
-                    self["subject"]["project"]["ID"],
-                    self["subject"]["ID"],
-                    self["ID"]
-                ).split("?")[0] + os.sep
-                  + filename
-                  )
-        # if verbose: print("          Downloading sr file... " + url_sr,flush=True)
-        sr = try_to_request(
-            self["subject"]["project"].interface,
-            url_sr
-        )
-        # nifti = self["scan"]["session"]["subject"]["project"].interface.get(url_nifti, allow_redirects=True)
-        sr.raise_for_status()
-
-        with open(os.path.join(complet_path, filename), 'wb') as sr_file:
-            sr_file.write(sr.content)
+    # def get_list_struct_report(
+    #         self, path_download, bool_list_resources, overwrite=False, verbose=False
+    # ):
+    #     output = StringIO()
+    #     output.write(
+    #         try_to_request(
+    #             self["subject"]["project"].interface,
+    #             self["subject"]["project"].url_xnat
+    #             + dict_uris["struct_reports"](
+    #                 self["subject"]["project"]["ID"],
+    #                 self["subject"]["ID"],
+    #                 self["ID"])
+    #         ).text
+    #     )
+    #     output.seek(0)
+    #     reader = csv.DictReader(output)
+    #
+    #     if verbose:
+    #         print(format_message(self.level_verbose, self.level_tab, f"Session SR:  {self['ID']}"), flush=True)
+    #     for row in reader:
+    #         # id_session=re.search(r'\d+', row["Name"]).group(0)
+    #         try:
+    #             id_session = re.search(r'sr.*', row["Name"]).group(0)
+    #         except KeyError as e:
+    #             print("\033[20;0H\u001b[0K", end="", flush=True)
+    #             print(row)
+    #             print(self["subject"]["project"]["ID"],
+    #                   self["subject"]["ID"],
+    #                   self["ID"])
+    #             return
+    #         self.download_struct_report(
+    #             path_download, row["Name"], overwrite=overwrite, verbose=verbose
+    #         )
+    #     output.close()
+    #
+    # def download_struct_report(self, path_download, filename, overwrite=False, verbose=False):
+    #
+    #     complet_path = (
+    #         os.path.join(
+    #             path_download,
+    #             dict_path["path_sr"](
+    #                 self["subject"]["ID"],
+    #                 self["ID"]
+    #             )
+    #         )
+    #     )
+    #     sr_path = os.path.join(complet_path, filename)
+    #     if not overwrite and os.path.exists(sr_path):
+    #         print("Structural Report exists", flush=True)
+    #         return
+    #     os.makedirs(complet_path, exist_ok=True)
+    #     url_sr = (self["subject"]["project"].url_xnat
+    #               + dict_uri["struct_reports"](
+    #                 self["subject"]["project"]["ID"],
+    #                 self["subject"]["ID"],
+    #                 self["ID"]
+    #             ).split("?")[0] + os.sep
+    #               + filename
+    #               )
+    #     # if verbose: print("          Downloading sr file... " + url_sr,flush=True)
+    #     sr = try_to_request(
+    #         self["subject"]["project"].interface,
+    #         url_sr
+    #     )
+    #     # nifti = self["scan"]["session"]["subject"]["project"].interface.get(url_nifti, allow_redirects=True)
+    #     sr.raise_for_status()
+    #
+    #     with open(os.path.join(complet_path, filename), 'wb') as sr_file:
+    #         sr_file.write(sr.content)
 
     def get_list_assessors(self, verbose):
         output = StringIO()
@@ -379,7 +454,7 @@ class Session(dict):
             try_to_request(
                 self["subject"]["project"].interface,
                 self["subject"]["project"].url_xnat
-                + dict_uri["assessors"](
+                + dict_uris["assessors"](
                     self["subject"]["project"]["ID"],
                     self["subject"]["ID"],
                     self["ID"]
@@ -438,7 +513,7 @@ class scan(dict):
             try_to_request(
                 self["session"]["subject"]["project"].interface,
                 self["session"]["subject"]["project"].url_xnat
-                + dict_uri["resources"](
+                + dict_uris["scan_resources"](
                     self["session"]["subject"]["project"]["ID"],
                     self["session"]["subject"]["ID"],
                     self["session"]["ID"],
@@ -450,7 +525,7 @@ class scan(dict):
         reader = csv.DictReader(output)
         self.dict_resources = dict()
         for row in reader:
-            self.dict_resources[row["xnat_abstractresource_id"]] = resources(self, self.level_verbose, self.level_tab, **row)
+            self.dict_resources[row["xnat_abstractresource_id"]] = resources(self, self.level_verbose + 1, self.level_tab + 1, **row)
         output.close()
 
     def download(
@@ -540,13 +615,14 @@ class resources(dict):
         dicom_path = os.path.join(complet_path, filename)
         dicom_path_metadata = os.path.join(complet_path_metadata, "dicom.json")
         if not overwrite and (os.path.exists(dicom_path) and os.path.exists(dicom_path_metadata)):
-            if verbose: print("DICOM file already exist")
+            #if verbose: print("DICOM file already exist")
             return dicom_path, dicom_path_metadata
         # if not overwrite and os.path.exists(dicom_path):
         #    if verbose: print("          DICOM metadata file already exist")
         #    return
         if verbose:
-            print("Downloading DICOM file...", flush=True)
+            pass
+            #print("Downloading DICOM file...", flush=True, end="")
             # print("          Downloading DICOM  Metadata file...",flush=True)
 
         os.makedirs(complet_path, exist_ok=True)
@@ -681,32 +757,19 @@ class resources(dict):
 
         self.get_list_files(verbose)
         is_metadata_saved = False
-        for file_obj in self.dict_resources.values():
+
+        for index, file_obj in enumerate(self.dict_resources.values()):
 
             if self["label"] == "DICOM" and bool_list_resources[1]:
+                print(format_message(self.level_verbose + 1, self.level_tab + 1, f"{index} of {self['file_count']}"), end="",
+                      flush=True)
+                #self.download_dicom(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
 
-                dicom_path, dicom_path_metadata = self.download_dicom(path_download, file_obj["Name"],
-                                                                      overwrite=overwrite, verbose=verbose)
-                if not is_metadata_saved:
-                    dicom = pydicom.dcmread(dicom_path, stop_before_pixels=True)
-                    try:
-                        string_json = dicom.to_json()
-                    except TypeError as e:
-                        continue
-                    dict_json = json.loads(string_json)
-                    # del dict_json["7FE00010"]
-                    string_json = json.dumps(dict_json, default=lambda o: o.__dict__,
-                                             sort_keys=True)
-                    with open(dicom_path_metadata, 'w') as dicom_file:
-                        dicom_file.write(string_json)
-                    is_metadata_saved = True
-
-            if self["label"] == "NIFTI" and bool_list_resources[2]:
-                self.download_nifti(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
-
-            if self["label"] == "PNG" and bool_list_resources[2]:
-                self.download_png(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
+            if self["label"] == "SECONDARY" and bool_list_resources[2]:
+                #self.download_dicom(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
+                pass
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
+        print(format_message(self.level_verbose+1, self.level_tab+1, "\u001b[0K"), end="", flush=True)
 
 class assessors(dict):
     def __init__(self, session, level_verbose, level_tab, **kwargs):

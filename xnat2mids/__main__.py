@@ -63,52 +63,17 @@ Description:
 
 import os
 import argparse
+from pathlib import Path
 # serialize model to json
 
-from xnat import *
-from mids_conversion import *
-from variables import *
+import xnat
+#import mids_conversion
+import variables
 
 
 ###############################################################################
 # Functions
 ###############################################################################
-def list_directory_xnat(project_list):
-    loop = True
-    project_names = [path_.split(os.sep)[-1] for path_ in project_list]
-    while loop:
-        for i, project_item in enumerate(project_names):
-            if not i % 5:
-                print((""))
-            string = str(i + 1) + ") " + project_item
-            print("{0:20s}".format(string), end=" ", flush=True)
-        answer = input("\nChoose the project: ")
-        answer = str(answer)
-        answer_list = []
-        answer_list_aux = answer.split(' ')
-
-        for ans in answer_list_aux:
-            if ans.isdigit():
-                ans = int(ans) - 1
-                if ans >= len(project_names):
-                    print("the number " + ans + " is not corrected, try again", flush=True)
-                    break
-                else:
-                    answer_list.append(project_names[ans])
-            else:
-                if not (any([ans in path_ for path_ in project_names])):
-                    if ans == "exit":
-                        exit(1)
-                    else:
-                        print("the project " + ans
-                              + " is not corrected, try again")
-                        break
-                else:
-                    answer_list.append(ans)
-        else:
-            loop = False
-
-    return answer_list
 
 
 def main():
@@ -192,13 +157,22 @@ def main():
                         in the dataset(A clear dataset with only one part are needed)""")
     parser.add_argument('--overwrite', default=False, action='store_true',
                         help=""" Overwrite download files""")
+    parser.add_argument('-t', '--types', type=str, default="nr", nargs=1,
+                        help="""Download types of MRI images
+                            included in xnat
+                            - s = snapshoot
+                            - d = dicom + dicom metadata in folder NIFTI
+                            - n = nifti or png if image is one slide (2D)
+                            - r = Structural report
+                            - m = Roi segmentation (Mask)
+                            default = nr""")
     args = parser.parse_args()
-    print(reset_terminal, end="", flush=True)
-
+    print(variables.reset_terminal, end="", flush=True)
+    print(args)
     page = args.web
     user = args.user
-    xnat_data_path = args.input
-    mids_data_path = args.output
+    xnat_data_path = Path(args.input) if args.input else None
+    mids_data_path = Path(args.output) if args.output else None
     project_list = args.projects
     verbose = args.verbose
     body_part = args.body_part
@@ -206,12 +180,13 @@ def main():
     overwrite = args.overwrite
 
     if xnat_data_path and page:
+        xnat_data_path.mkdir(exist_ok=True)
         with xnat.Xnat_Session(page, user) as xnat_session:
             xnat_session.download_projects(
                 xnat_data_path,
                 with_department=True,
                 project_list=project_list,
-                bool_list_resources=[char in types for char in types_files_xnat],
+                bool_list_resources=[char in types for char in variables.types_files_xnat],
                 overwrite=overwrite,
                 verbose=verbose
             )
@@ -220,12 +195,10 @@ def main():
         # if project_list is None, the projects in the folder xnat must be
         # chosen
         if not project_list:
-            project_paths = [dirs for dirs in os.listdir(xnat_data_path)]
-            project_list = list_directory_xnat(project_paths)
-        project = xnat_data_path.split("/")[-2]
-        if not os.path.isdir(mids_data_path):
-            os.mkdir(args.output)
-        mids_data_path = args.output
+            project_paths = [dirs for dirs in xnat_data_path.iterdir()]
+            project_names = [path_.name for path_ in project_paths]
+            project_list = xnat.list_directory_xnat(project_names)
+        mids_data_path.mkdir(exist_ok=True)
         # for each project choice
         for xnat_project in project_list:
             print("MIDS are generating...")
@@ -250,3 +223,6 @@ def main():
                 os.path.join(xnat_data_path, xnat_project),
                 mids_data_path
             )
+
+if __name__ == "__main__":
+    main()
