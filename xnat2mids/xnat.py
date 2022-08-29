@@ -562,7 +562,7 @@ class scan(dict):
                 # return
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
 
-class resources(dict):
+class scan_resources(dict):
     def __init__(self, scan, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
         self["scan"] = scan

@@ -1,0 +1,2 @@
+class SessionResource(dict):
+    pass
