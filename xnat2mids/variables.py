@@ -37,7 +37,7 @@ dict_uris = {
         lambda p, s, e, sc, r:
         "data/projects/{}/subjects/{}/experiments/{}/scans/{}/resources/{}/files?format=csv".format(p, s, e, sc, r)
     )
-}
+}vim
 
 
 # def format_message (line, tab_value, message):
