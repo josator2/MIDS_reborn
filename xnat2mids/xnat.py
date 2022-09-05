@@ -17,6 +17,7 @@ from variables import dict_uris
 from variables import format_message
 from variables import reset_terminal
 
+
 ###############################################################################
 # Functions
 ###############################################################################
@@ -338,8 +339,8 @@ class Session(dict):
         reader = csv.DictReader(output)
         self.dict_scans = dict()
         for row in reader:
-            #print(format_message(16, 5, ""))
-            #print(row)
+            # print(format_message(16, 5, ""))
+            # print(row)
             # If the "xsiType" key of the session is not equal to
             # "xnat: mrSessionData", this may not work in this point.
             try:
@@ -348,6 +349,7 @@ class Session(dict):
             except KeyError:
                 continue
         output.close()
+
     def get_list_resources(self, path_download, overwrite=False, verbose=False):
         output = StringIO()
         if verbose: print(
@@ -376,6 +378,7 @@ class Session(dict):
             except KeyError:
                 continue
         output.close()
+
     # def get_list_struct_report(
     #         self, path_download, bool_list_resources, overwrite=False, verbose=False
     # ):
@@ -525,7 +528,8 @@ class scan(dict):
         reader = csv.DictReader(output)
         self.dict_resources = dict()
         for row in reader:
-            self.dict_resources[row["xnat_abstractresource_id"]] = resources(self, self.level_verbose + 1, self.level_tab + 1, **row)
+            self.dict_resources[row["xnat_abstractresource_id"]] = resources(self, self.level_verbose + 1,
+                                                                             self.level_tab + 1, **row)
         output.close()
 
     def download(
@@ -534,7 +538,7 @@ class scan(dict):
             overwrite=False,
             verbose=False
     ):
-        #print(format_message(13, 4, "entro en scan"))
+        # print(format_message(13, 4, "entro en scan"))
         self.get_list_resources(verbose)
         for resource_obj in self.dict_resources.values():
             try:
@@ -551,7 +555,7 @@ class scan(dict):
                 )
                                 )
                 print(e)
-                #with open(os.path.join(path_download, ".log"), "a") as log:
+                # with open(os.path.join(path_download, ".log"), "a") as log:
                 #    log.write(
                 #        "Error: {} in nifti url {}".format(
                 #            e,
@@ -562,6 +566,7 @@ class scan(dict):
                 # return
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
 
+
 class scan_resources(dict):
     def __init__(self, scan, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
@@ -571,7 +576,8 @@ class scan_resources(dict):
 
     def get_list_files(self, verbose):
         output = StringIO()
-        if verbose: print(format_message(self.level_verbose, self.level_tab, f"resource: {self['label']}"), end=" ----> ",
+        if verbose: print(format_message(self.level_verbose, self.level_tab, f"resource: {self['label']}"),
+                          end=" ----> ",
                           flush=True)
         file_text = try_to_request(
             self["scan"]["session"]["subject"]["project"].interface,
@@ -615,14 +621,14 @@ class scan_resources(dict):
         dicom_path = os.path.join(complet_path, filename)
         dicom_path_metadata = os.path.join(complet_path_metadata, "dicom.json")
         if not overwrite and (os.path.exists(dicom_path) and os.path.exists(dicom_path_metadata)):
-            #if verbose: print("DICOM file already exist")
+            # if verbose: print("DICOM file already exist")
             return dicom_path, dicom_path_metadata
         # if not overwrite and os.path.exists(dicom_path):
         #    if verbose: print("          DICOM metadata file already exist")
         #    return
         if verbose:
             pass
-            #print("Downloading DICOM file...", flush=True, end="")
+            # print("Downloading DICOM file...", flush=True, end="")
             # print("          Downloading DICOM  Metadata file...",flush=True)
 
         os.makedirs(complet_path, exist_ok=True)
@@ -648,7 +654,7 @@ class scan_resources(dict):
                          + filename
                          )
 
-            #with open(path_download + "urls_descarga.txt", "a") as f:
+            # with open(path_download + "urls_descarga.txt", "a") as f:
             #    f.write("%s \n %s # %r # %r # %r \n" % (
             #        url_dicom, dicom_path, overwrite, verbose, os.path.exists(dicom_path)))
             #    f.close()
@@ -691,7 +697,7 @@ class scan_resources(dict):
                      + filename
                      )
 
-        #with open(path_download + "urls_descarga.txt", "a") as f:
+        # with open(path_download + "urls_descarga.txt", "a") as f:
         #    f.write(
         #        "%s \n %s # %r # %r # %r \n" % (url_nifti, nifti_path, overwrite, verbose, os.path.exists(nifti_path)))
         #    f.close()
@@ -734,7 +740,7 @@ class scan_resources(dict):
                    + filename
                    )
 
-        #with open(path_download + "urls_descarga.txt", "a") as f:
+        # with open(path_download + "urls_descarga.txt", "a") as f:
         #    f.write("%s \n %s # %r # %r # %r \n" % (url_png, png_path, overwrite, verbose, os.path.exists(png_path)))
         #    f.close()
         png = try_to_request(
@@ -761,15 +767,17 @@ class scan_resources(dict):
         for index, file_obj in enumerate(self.dict_resources.values()):
 
             if self["label"] == "DICOM" and bool_list_resources[1]:
-                print(format_message(self.level_verbose + 1, self.level_tab + 1, f"{index} of {self['file_count']}"), end="",
+                print(format_message(self.level_verbose + 1, self.level_tab + 1, f"{index} of {self['file_count']}"),
+                      end="",
                       flush=True)
-                #self.download_dicom(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
+                # self.download_dicom(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
 
             if self["label"] == "SECONDARY" and bool_list_resources[2]:
-                #self.download_dicom(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
+                # self.download_dicom(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
                 pass
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
-        print(format_message(self.level_verbose+1, self.level_tab+1, "\u001b[0K"), end="", flush=True)
+        print(format_message(self.level_verbose + 1, self.level_tab + 1, "\u001b[0K"), end="", flush=True)
+
 
 class assessors(dict):
     def __init__(self, session, level_verbose, level_tab, **kwargs):
@@ -827,7 +835,7 @@ class assessors(dict):
                 sys.exit(1)
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
 
-class assessors_resources(dict):
+
     def __init__(self, assessors, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
         self["assessors"] = assessors
@@ -910,4 +918,3 @@ class assessors_resources(dict):
         for file_obj in self.dict_roi_files.values():
             self.download_roi_files(path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose)
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
-

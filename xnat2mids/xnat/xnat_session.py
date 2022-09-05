@@ -1,17 +1,21 @@
+###############################################################################
+# Imports
+###############################################################################
 import csv
 import getpass
-import json
 import os
-import re
-import sys
 import time
-import traceback
+import progressbar
+import requests
 from io import StringIO
-from shutil import copyfile
+from xnat2mids.xnat.project import Project
+from xnat2mids.variables import *
 
 ###############################################################################
 # Functions
 ###############################################################################
+
+
 def list_directory_xnat(project_list):
     project_list.sort()
     loop = True
@@ -83,7 +87,7 @@ def try_to_request(interface, web, level_verbose=15, level_tab=15):
     return req
 
 
-class Xnat_Session():
+class XnatSession:
 
     def __init__(self, url_xnat, user=None, password=None):
         self.url_xnat = url_xnat

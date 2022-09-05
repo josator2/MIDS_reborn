@@ -1,6 +1,11 @@
 
 
-class assessors_resources(dict):
+import csv
+import os
+from io import StringIO
+
+
+class AssessorsResources(dict):
     def __init__(self, assessors, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
         self["assessors"] = assessors

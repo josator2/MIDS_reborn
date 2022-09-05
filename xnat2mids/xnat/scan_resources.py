@@ -1,4 +1,11 @@
-class scan_resources(dict):
+
+import csv
+import os
+from io import StringIO
+from shutil import copyfile
+
+
+class ScanResources(dict):
     def __init__(self, scan, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
         self["scan"] = scan

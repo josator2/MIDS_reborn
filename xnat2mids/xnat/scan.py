@@ -1,4 +1,9 @@
-class scan(dict):
+
+import csv
+from io import StringIO
+
+
+class Scan(dict):
     def __init__(self, session, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
         self["session"] = session

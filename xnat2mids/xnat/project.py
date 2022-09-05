@@ -1,6 +1,8 @@
-
-
-
+import csv
+import os
+from io import StringIO
+from xnat2mids.xnat.subject import Subject
+from xnat2mids.variables import *
 
 class Project(dict):
     def __init__(self, url_xnat, interface, level_verbose, level_tab, **kwargs):

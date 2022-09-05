@@ -1,3 +1,12 @@
+
+import csv
+from io import StringIO
+from xnat2mids.xnat.scan import Scan
+from xnat2mids.xnat.session_resource import Session_Resource
+from xnat2mids.xnat.assessor import Assessors
+from xnat2mids.variables import format_message
+from xnat2mids.variables import *
+
 class Session(dict):
     def __init__(self, subject, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
@@ -28,12 +37,12 @@ class Session(dict):
             # If the "xsiType" key of the session is not equal to
             # "xnat: mrSessionData", this may not work in this point.
             try:
-                self.dict_scans[row["ID"]] = scan(self, self.level_verbose + 1, self.level_tab + 1, **row)
+                self.dict_scans[row["ID"]] = Scan(self, self.level_verbose + 1, self.level_tab + 1, **row)
 
             except KeyError:
                 continue
         output.close()
-    def get_list_resources(self, path_download, overwrite=False, verbose=False):
+    def get_list_session_resources(self, path_download, overwrite=False, verbose=False):
         output = StringIO()
         if verbose: print(
             format_message(self.level_verbose, self.level_tab, f"Session: {self['ID']}"), flush=True)
@@ -56,7 +65,7 @@ class Session(dict):
             # If the "xsiType" key of the session is not equal to
             # "xnat: mrSessionData", this may not work in this point.
             try:
-                self.dict_scans[row["ID"]] = Resource(self, self.level_verbose + 1, self.level_tab + 1, **row)
+                self.dict_scans[row["ID"]] = Session_Resource(self, self.level_verbose + 1, self.level_tab + 1, **row)
 
             except KeyError:
                 continue
@@ -152,7 +161,7 @@ class Session(dict):
         self.dict_assessors = dict()
         for row in reader:
             try:
-                self.dict_assessors[row["ID"]] = assessors(self, self.level_verbose + 1, self.level_tab + 1, **row)
+                self.dict_assessors[row["ID"]] = Assessors(self, self.level_verbose + 1, self.level_tab + 1, **row)
             except Exception as e:
                 print(e)
                 # sys.exit(2)

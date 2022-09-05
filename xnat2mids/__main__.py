@@ -66,7 +66,7 @@ import argparse
 from pathlib import Path
 # serialize model to json
 
-import xnat
+from xnat2mids.xnat.xnat_session import XnatSession
 #import mids_conversion
 import variables
 
@@ -181,7 +181,7 @@ def main():
 
     if xnat_data_path and page:
         xnat_data_path.mkdir(exist_ok=True)
-        with xnat.Xnat_Session(page, user) as xnat_session:
+        with XnatSession(page, user) as xnat_session:
             xnat_session.download_projects(
                 xnat_data_path,
                 with_department=True,
