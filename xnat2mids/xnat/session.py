@@ -2,10 +2,12 @@
 import csv
 from io import StringIO
 from xnat2mids.xnat.scan import Scan
-from xnat2mids.xnat.session_resource import Session_Resource
+from xnat2mids.xnat.session_resource import SessionResource
 from xnat2mids.xnat.assessor import Assessors
 from xnat2mids.variables import format_message
-from xnat2mids.variables import *
+from xnat2mids.variables import dict_uris
+from xnat2mids.request import try_to_request
+
 
 class Session(dict):
     def __init__(self, subject, level_verbose, level_tab, **kwargs):
@@ -46,11 +48,19 @@ class Session(dict):
         output = StringIO()
         if verbose: print(
             format_message(self.level_verbose, self.level_tab, f"Session: {self['ID']}"), flush=True)
+        u = (
+            self["subject"]["project"].url_xnat
+            + dict_uris["session_resources"](
+                self["subject"]["project"]["ID"],
+                self["subject"]["ID"],
+                self["ID"]
+            )
+        )
         output.write(
             try_to_request(
                 self["subject"]["project"].interface,
                 self["subject"]["project"].url_xnat
-                + dict_uris["scans"](
+                + dict_uris["session_resources"](
                     self["subject"]["project"]["ID"],
                     self["subject"]["ID"],
                     self["ID"])
@@ -58,14 +68,11 @@ class Session(dict):
         )
         output.seek(0)
         reader = csv.DictReader(output)
-        self.dict_scans = dict()
+        self.dict_resources = dict()
         for row in reader:
-            # print(format_message(16, 5, ""))
-            # print(row)
-            # If the "xsiType" key of the session is not equal to
-            # "xnat: mrSessionData", this may not work in this point.
+
             try:
-                self.dict_scans[row["ID"]] = Session_Resource(self, self.level_verbose + 1, self.level_tab + 1, **row)
+                self.dict_resources[row["label"]] = SessionResource(self, self.level_verbose + 1, self.level_tab + 1, **row)
 
             except KeyError:
                 continue
@@ -176,19 +183,29 @@ class Session(dict):
         # print("\033[7;0H\u001b[0K", end="",flush=True)
         self.get_list_scans(verbose)
         for scan_obj in self.dict_scans.values():
-            scan_obj.download(
-                path_download, bool_list_resources=bool_list_resources,
-                overwrite=overwrite, verbose=verbose
-            )
+            # scan_obj.download(
+            #     path_download, bool_list_resources=bool_list_resources,
+            #     overwrite=overwrite, verbose=verbose
+            # )
+            pass
         # print("\033[18;0H\u001b[0K", end="",flush=True)
-        self.get_list_struct_report(path_download, bool_list_resources, overwrite=False, verbose=verbose)
+        #self.get_list_struct_report(path_download, bool_list_resources, overwrite=False, verbose=verbose)
 
         self.get_list_assessors(verbose)
         for resource_obj in self.dict_assessors.values():
-            # sys.exit(1)
+
             resource_obj.download(
                 path_download,
                 bool_list_resources=bool_list_resources,
                 overwrite=overwrite, verbose=verbose)
+
+        self.get_list_session_resources(verbose)
+        for resource_obj in self.dict_resources.values():
+
+            # resource_obj.download(
+            #     path_download,
+            #     bool_list_resources=bool_list_resources,
+            #     overwrite=overwrite, verbose=verbose)
+            pass
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)
 

@@ -68,7 +68,12 @@ from pathlib import Path
 
 from xnat2mids.xnat.xnat_session import XnatSession
 #import mids_conversion
-import variables
+from xnat2mids.variables import types_files_xnat
+from xnat2mids.variables import format_message
+from xnat2mids.variables import reset_terminal
+from xnat2mids.variables import dict_paths
+from xnat2mids.variables import dict_uris
+
 
 
 ###############################################################################
@@ -167,7 +172,7 @@ def main():
                             - m = Roi segmentation (Mask)
                             default = nr""")
     args = parser.parse_args()
-    print(variables.reset_terminal, end="", flush=True)
+    print(reset_terminal, end="", flush=True)
     print(args)
     page = args.web
     user = args.user
@@ -186,7 +191,7 @@ def main():
                 xnat_data_path,
                 with_department=True,
                 project_list=project_list,
-                bool_list_resources=[char in types for char in variables.types_files_xnat],
+                bool_list_resources=[True for char in types_files_xnat],
                 overwrite=overwrite,
                 verbose=verbose
             )

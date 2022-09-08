@@ -1,7 +1,10 @@
 import csv
 from io import StringIO
+from xnat2mids.variables import format_message
+from xnat2mids.variables import dict_uris
+from xnat2mids.request import try_to_request
 from xnat2mids.xnat.assessor_resource import AssessorsResources
-
+import requests
 class Assessors(dict):
     def __init__(self, session, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
@@ -16,7 +19,7 @@ class Assessors(dict):
         file_text = try_to_request(
             self["session"]["subject"]["project"].interface,
             self["session"]["subject"]["project"].url_xnat
-            + dict_uri["assessors_resources"](
+            + dict_uris["assessors_resources"](
                 self["session"]["subject"]["project"]["ID"],
                 self["session"]["subject"]["ID"],
                 self["session"]["ID"],
@@ -29,7 +32,7 @@ class Assessors(dict):
         reader = csv.DictReader(output)
         self.dict_resources = dict()
         for row in reader:
-            self.dict_resources[row["xnat_abstractresource_id"]] = assessors_resources(
+            self.dict_resources[row["xnat_abstractresource_id"]] = AssessorsResources(
                 self, self.level_verbose + 1, self.level_tab + 1, **row
             )
         output.close()

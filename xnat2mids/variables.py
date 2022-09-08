@@ -11,10 +11,10 @@ dict_uris = {
     "projects": "data/projects?format=csv",
     "subjects": lambda p: "data/projects/{}/subjects?format=csv".format(p),
     "experiments": lambda p, s: "data/projects/{}/subjects/{}/experiments?format=csv".format(p, s),
-    "resources": (
-        lambda p, s, e: "data/projects/{}/subjects/{}/experiments/{}/resources/sr/files?format=csv".format(p, s, e)
+    "session_resources": (
+        lambda p, s, e: "data/projects/{}/subjects/{}/experiments/{}/resources?format=csv".format(p, s, e)
     ),
-    "resource_files": (
+    "session_resource_files": (
         lambda p, s, e, r: "data/projects/{}/subjects/{}/experiments/{}/resources/{}/files?format=csv".format(p, s, e, r)
     ),
     "assessors": lambda p, s, e: "data/projects/{}/subjects/{}/experiments/{}/assessors?format=csv".format(p, s, e),
@@ -37,7 +37,7 @@ dict_uris = {
         lambda p, s, e, sc, r:
         "data/projects/{}/subjects/{}/experiments/{}/scans/{}/resources/{}/files?format=csv".format(p, s, e, sc, r)
     )
-}vim
+}
 
 
 # def format_message (line, tab_value, message):

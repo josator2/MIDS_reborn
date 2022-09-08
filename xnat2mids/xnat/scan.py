@@ -1,8 +1,10 @@
-
+import requests
 import csv
 from io import StringIO
-
-
+from xnat2mids.variables import format_message
+from xnat2mids.variables import dict_uris
+from xnat2mids.request import try_to_request
+from xnat2mids.xnat.scan_resources import ScanResources
 class Scan(dict):
     def __init__(self, session, level_verbose, level_tab, **kwargs):
         super().__init__(**kwargs)
@@ -29,7 +31,7 @@ class Scan(dict):
         reader = csv.DictReader(output)
         self.dict_resources = dict()
         for row in reader:
-            self.dict_resources[row["xnat_abstractresource_id"]] = resources(self, self.level_verbose + 1, self.level_tab + 1, **row)
+            self.dict_resources[row["xnat_abstractresource_id"]] = ScanResources(self, self.level_verbose + 1, self.level_tab + 1, **row)
         output.close()
 
     def download(
@@ -55,13 +57,4 @@ class Scan(dict):
                 )
                                 )
                 print(e)
-                #with open(os.path.join(path_download, ".log"), "a") as log:
-                #    log.write(
-                #        "Error: {} in nifti url {}".format(
-                #            e,
-                #            complet_path
-                #        )
-
-                #    )
-                # return
         print(format_message(self.level_verbose, self.level_tab, "\u001b[0K"), end="", flush=True)

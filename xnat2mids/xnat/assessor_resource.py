@@ -3,6 +3,10 @@
 import csv
 import os
 from io import StringIO
+from xnat2mids.variables import format_message
+from xnat2mids.variables import dict_uris
+from xnat2mids.variables import dict_paths
+from xnat2mids.request import try_to_request
 
 
 class AssessorsResources(dict):
@@ -23,7 +27,7 @@ class AssessorsResources(dict):
         file_text = try_to_request(
             self["assessors"]["session"]["subject"]["project"].interface,
             self["assessors"]["session"]["subject"]["project"].url_xnat
-            + dict_uri["roi_files"](
+            + dict_uris["assessor_resource_roi_files"](
                 self["assessors"]["session"]["subject"]["project"]["ID"],
                 self["assessors"]["session"]["subject"]["ID"],
                 self["assessors"]["session"]["ID"],
@@ -41,7 +45,7 @@ class AssessorsResources(dict):
         output.close()
 
     def download_roi_files(self, path_download, filename, overwrite=False, verbose=False):
-        complet_path = (path_download + dict_path["path_download_roi"](
+        complet_path = (path_download + dict_paths["path_download_roi"](
             self["assessors"]["session"]["subject"]["ID"],
             self["assessors"]["session"]["ID"],
             self["assessors"]["ID"],
@@ -56,7 +60,7 @@ class AssessorsResources(dict):
         if verbose: print(" Downloading png file...", flush=True)
         os.makedirs(complet_path, exist_ok=True)
         url_roi = (self["assessors"]["session"]["subject"]["project"].url_xnat
-                   + dict_uri["files"](
+                   + dict_uris["assessor_resource_roi_files"](
                     self["assessors"]["session"]["subject"]["project"]["ID"],
                     self["assessors"]["session"]["subject"]["ID"],
                     self["assessors"]["session"]["ID"],

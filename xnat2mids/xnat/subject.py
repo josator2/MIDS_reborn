@@ -1,8 +1,9 @@
 import csv
 from io import StringIO
 from xnat2mids.xnat.session import Session
-from xnat2mids.variables import *
-
+from xnat2mids.variables import format_message
+from xnat2mids.variables import dict_uris
+from xnat2mids.request import try_to_request
 
 class Subject(dict):
     def __init__(self, level_verbose, level_tab, **kwargs):
