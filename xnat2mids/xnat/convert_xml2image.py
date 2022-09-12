@@ -2,9 +2,7 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
 
-from matplotlib.patches import Circle, Wedge, Polygon
-from matplotlib.collections import PatchCollection
-from pathlib import Path
+
 
 def xml2image(xml_file):
 
@@ -57,4 +55,5 @@ def xml2image(xml_file):
         dest = cv2.addWeighted(dest, 1, a, 1, 0)
 
     gray_image = cv2.cvtColor(dest, cv2.COLOR_BGR2GRAY)
-    np.image.imsave(xml_file.parent.joinpath(xml_file.stem + "png"), gray_image)
+    np.image.imsave(xml_file.parent.joinpath(xml_file.stem + ".png"), gray_image)
+    coords.to_csv(xml_file.parent.joinpath(xml_file.stem + ".csv"), sep='\t')

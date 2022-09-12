@@ -2,12 +2,13 @@
 
 import csv
 import os
+from pathlib import Path
 from io import StringIO
 from xnat2mids.variables import format_message
 from xnat2mids.variables import dict_uris
 from xnat2mids.variables import dict_paths
 from xnat2mids.request import try_to_request
-
+from xnat2mids.xnat.convert_xml2image import xml2image
 
 class AssessorsResources(dict):
     def __init__(self, assessors, level_verbose, level_tab, **kwargs):
@@ -56,6 +57,7 @@ class AssessorsResources(dict):
         roi_path = os.path.join(complet_path, filename)
         if not overwrite and os.path.exists(roi_path):
             if verbose: print(" roi file already exist")
+            xml2image(Path(roi_path))
             return
         if verbose: print(" Downloading png file...", flush=True)
         os.makedirs(complet_path, exist_ok=True)
@@ -78,8 +80,9 @@ class AssessorsResources(dict):
         # png = self["scan"]["session"]["subject"]["project"].interface.get(url_png, allow_redirects=True)
         roi.raise_for_status()
 
-        with open(os.path.join(complet_path, filename), 'wb') as roi_file:
+        with open(roi_path, 'wb') as roi_file:
             roi_file.write(roi.content)
+        xml2image(Path(roi_path))
 
     def download(
             self,

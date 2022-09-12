@@ -202,14 +202,13 @@ class ScanResources(dict):
 
         self.get_list_files(verbose)
         self.is_metadata_saved = False
-        dicom_path, dicom_path_metadata = "", ""
         for index, file_obj in enumerate(self.dict_resources.values()):
 
             if self["label"] == "DICOM":
                 print(format_message(self.level_verbose + 1, self.level_tab + 1, f"{index} of {self['file_count']}"),
                       end="",
                       flush=True)
-                dicom_path, dicom_path_metadata = self.download_dicom(
+                self.download_dicom(
                     path_download, file_obj["Name"], overwrite=overwrite, verbose=verbose
                 )
 
