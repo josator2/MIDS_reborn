@@ -82,7 +82,7 @@ class AssessorsResources(dict):
 
         with open(roi_path, 'wb') as roi_file:
             roi_file.write(roi.content)
-        xml2image(Path(roi_path))
+        #xml2image(Path(roi_path))
 
     def download(
             self,
