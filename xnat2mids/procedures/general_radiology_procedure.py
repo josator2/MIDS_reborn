@@ -1,6 +1,6 @@
 from shutil import copyfile
 from pathlib import Path
-from xnat2mids.Procedures import Procedures
+from xnat2mids.procedures import Procedures
 
 
 class GeneralRadiologyProcedures(Procedures):

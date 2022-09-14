@@ -1,6 +1,9 @@
 import time
 import requests
 
+from xnat2mids.variables import format_message
+
+
 def try_to_request(interface, web, level_verbose=15, level_tab=15):
     # Function that allows a persistent get request to a web page
 
