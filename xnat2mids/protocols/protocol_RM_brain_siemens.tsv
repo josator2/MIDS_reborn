@@ -1,0 +1,8 @@
+	Protocol	acq	folder	Manufacturer ('00080070')	Scanning Sequence ('00180020')	SequenceVariant ('00180021')	ScanOptions ('00180022')	Angio Flag  ('00180025')	MagneticFieldStrength ('00180087')	RepetitionTime ('00180080')	Inversion Time ('00180082')	FlipAngle ('00181314')	EchoTime ('00180081')	SliceThickness ('00180050')
+1	'FLAIR'	nan	anat	['Siemens']	['SE','SE\IR']	['SP\SK', 'SK\SP\MP']	'[PFP\\PFF\\CG\\RG\\FS\\PER', 'PFP\\PFF\\FS\\PER', 'PFP\\CG\\RG\\FS\\PER']	'N'	[3.0]	[5000.0]	[1800.0, 1650.0]	[120.0]	[393.0]	[1.0, 3.0, 1.5]
+2	'T2w'	swi	anat	['Siemens']	['SE']	['SP\SK']	['CG\RG\FS\PER']	'N'	[3.0]	[4000.0]	 [nan]	[150.0]	[78.0]	[3.0]
+3	'T2w'	'gre'	anat	['Siemens']	['GR']	['SK', 'SP']	['CG\RG\PER', 'PER']	'N'	[3.0]	[28.0]	 [nan]	[15.0]	[20.0]	[16.0, 2.0]
+4	'T1w'	'mprage'	anat	['Siemens']	['GR', 'RM', 'GR\IR']	['SK', 'MTC\SS\OSP', 'SK\SP\MP']	['PFP\\CG\\RG\\PER', 'PFP\\PER', 'CG\\RG\\FS\\PER', 'PFP\\CG\\RG\\FS\\PER', 'PFP\\RG\\FS', 'CG\\RG\\PER']	'N'	[3.0]	[2200.0, 2300.0]	[968.0, 900.0]	[8.0, 9.0]	[2.23, 2.93]	[1.2, 1.05469]
+5	'PDT2'	nan	anat	['Siemens']	['SE']	['SP\SK', 'SK\SP']	['CG\RG\PER', 'PER']	'N'	[3.0]	[4780.0]	 [nan]	[146.0, 142.0, 145.0, 131.0, 137.0, 138.0, 124.0, 135.0, 141.0, 143.0]	[9.0, 90.0]	[3.0]
+6	'T1w'	'ahead'	anat	['Siemens']	['GR', 'EP']	['FS\PER', 'CG\RG\FS\PER', nan]	[FS\PER, CG\RG\FS\PER]	'N'	[3.0]	[3.15]	[8.0]	[8.0]	[1.37]	[1.6, 3.0]
+7	'asl'	nan	perf	['Siemens']	['GR', 'EP']	['SK', 'SK\OSP']	['FS\PER', 'CG\RG\FS\PER']	'N'	[3.0]	[4600.0, 4000.0]	[1650.0]	[180.0, 160.0]	[17.0, 21.9]	[3.0, 4.5]
