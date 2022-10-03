@@ -67,13 +67,14 @@ from pathlib import Path
 # serialize model to json
 
 from xnat2mids.xnat.xnat_session import XnatSession
+from xnat2mids.xnat.xnat_session import list_directory_xnat
 #import mids_conversion
 from xnat2mids.variables import types_files_xnat
 from xnat2mids.variables import format_message
 from xnat2mids.variables import reset_terminal
 from xnat2mids.variables import dict_paths
 from xnat2mids.variables import dict_uris
-
+from xnat2mids.mids_conversion import  create_directory_mids_v1
 
 
 ###############################################################################
@@ -202,32 +203,32 @@ def main():
         if not project_list:
             project_paths = [dirs for dirs in xnat_data_path.iterdir()]
             project_names = [path_.name for path_ in project_paths]
-            project_list = xnat.list_directory_xnat(project_names)
+            project_list = list_directory_xnat(project_names)
         mids_data_path.mkdir(exist_ok=True)
         # for each project choice
         for xnat_project in project_list:
             print("MIDS are generating...")
-            MIDS_funtions.create_directory_mids_v1(
-                os.path.join(xnat_data_path, xnat_project),
+            create_directory_mids_v1(
+                xnat_data_path.joinpath(xnat_project),
                 mids_data_path,
                 body_part
             )
 
-            print("participats tsv are generating...")
-            MIDS_funtions.create_participants_tsv(
-                os.path.join(mids_data_path, xnat_project)
-            )
-
-            print("scan tsv are generating...")
-            MIDS_funtions.create_scans_tsv(
-                os.path.join(mids_data_path, xnat_project)
-            )
-
-            print("sessions tsv are generating...")
-            MIDS_funtions.create_sessions_tsv(
-                os.path.join(xnat_data_path, xnat_project),
-                mids_data_path
-            )
+            # print("participats tsv are generating...")
+            # MIDS_funtions.create_participants_tsv(
+            #     os.path.join(mids_data_path, xnat_project)
+            # )
+            #
+            # print("scan tsv are generating...")
+            # MIDS_funtions.create_scans_tsv(
+            #     os.path.join(mids_data_path, xnat_project)
+            # )
+            #
+            # print("sessions tsv are generating...")
+            # MIDS_funtions.create_sessions_tsv(
+            #     os.path.join(xnat_data_path, xnat_project),
+            #     mids_data_path
+            # )
 
 if __name__ == "__main__":
     main()
