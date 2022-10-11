@@ -1,4 +1,4 @@
-from xnat2mids.dicom_converters import dicom2nii
+from xnat2mids.dicom_converters import dicom2niix
 
 body_part_bids = ['head','brain']
 
@@ -13,7 +13,7 @@ class ProceduresMR:
 
 
     def control_sequences(
-        self, json_path, mids_session_path, protocol, acq, folder_BIDS, body_part
+        self, folder_nifti, mids_session_path, protocol, acq, dir_, folder_BIDS, body_part
     ):
 
         folder_image_mids = mids_session_path.joinpath(
@@ -21,21 +21,12 @@ class ProceduresMR:
             folder_BIDS
         )
         folder_image_mids.mkdir(parents=True, exist_ok=True)
-        nifti_path = dicom2nii(json_path)
-
-        if folder_BIDS == "dwi":
-            pass
-        if folder_BIDS == "anat":
-            self.anatomic_procedure(nifti_path, folder_image_mids, protocol, acq, body_part)
-        if folder_BIDS == "fmap":
-            pass
-        if folder_BIDS == "func":
-            pass
-        if folder_BIDS == "perf":
-            pass
 
 
-    def control_image(self, nifti_path,folder_image_mids, protocol, acq, body_part):
+
+        self.control_image(folder_nifti, folder_image_mids, protocol, acq, dir_, body_part)
+
+    def control_image(self, nifti_path, folder_image_mids, protocol, acq, dir_, body_part):
 
         """
 
@@ -63,9 +54,14 @@ class ProceduresMR:
             )
             for nifti_file in nifti_files
         ]
-        key = str([protocol_label, acq_label, bp_label, vp_label])
+        key = str([protocol_label, acq_label, bp_label, dir_, vp_label])
         value = self.run_dict.get(key, []).append([nifti_files, folder_image_mids])
         self.run_dict[key] = value
+
+    def copy_sessions(self):
+        for key, value in self.run_dict.items():
+            list_key = eval(key)
+            print(key, value)
 
     def get_plane_nib(nifti_list):
         """
@@ -77,5 +73,5 @@ class ProceduresMR:
         plane = nib.aff2axcodes(img.affine)[2]
         return "ax" if plane in ["S", "I"] else "sag" if plane in ["R", "L"] else "cor"
 
-    def copy_session(self):
-        pass
+
+
