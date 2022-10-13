@@ -22,11 +22,11 @@ class Tagger:
 
         #targetScan = pd.DataFrame.from_dict([dict_atrubutes])
         # Verify to which scan group corresponds
-        scaning_sequence = dict_atrubutes["Scanning Sequence ('00180020')"]
+        scaning_sequence = dict_atrubutes["ScanningSequence ('00180020')"]
         scaning_sequence = scaning_sequence if type(scaning_sequence) is str else "\\".join(scaning_sequence)
         table_protocol_SS = self.table_protocols[[
                     (False if scaning_sequence not in l else True)
-                    for l in list(self.table_protocols["Scanning Sequence ('00180020')"])
+                    for l in list(self.table_protocols["ScanningSequence ('00180020')"])
                 ]]
         #print(table_protocol_SS)
 

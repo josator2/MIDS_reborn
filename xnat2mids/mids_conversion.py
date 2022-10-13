@@ -8,22 +8,22 @@ from xnat2mids.dicom_converters import dicom2niix
 subses_pattern = r"[A-z]+(?P<prefix_sub>\d*)?(_S)(?P<suffix_sub>\d+)/[A-z]+(?P<prefix_ses>\d*)?(_E)(?P<suffix_ses>\d+)"
 dict_keys = {
     'Modality': '00080060',
-    'Series Description': '0008103E',
-    'Protocol Name': '00181030',
-    'Complex Image Component Attribute': '00089208',
-    "Image Type" :'00080008',
+    'SeriesDescription': '0008103E',
+    'ProtocolName': '00181030',
+    'ComplexImage Component Attribute': '00089208',
+    "ImageType" :'00080008',
     #"difusion Directionality": ''
 }
 
 dict_mr_keys = {
     'Manufacturer': '00080070',
-    'Scanning Sequence': '00180020',
+    'ScanningSequence': '00180020',
     'SequenceVariant': '00180021',
     'ScanOptions': '00180022',
-    'Angio Flag': '00180025',
+    'AngioFlag': '00180025',
     'MagneticFieldStrength': '00180087',
     'RepetitionTime': '00180080',
-    'Inversion Time': '00180082',
+    'InversionTime': '00180082',
     'FlipAngle': '00181314',
     'EchoTime': '00180081',
     'SliceThickness': '00180050',
@@ -68,15 +68,16 @@ BIOFACE_PROTOCOL_NAMES_DESCARTED = [
     '3D-T2-FLAIR SAG NUEVO-1'
 ]
 
-options_dcm2niix = "-i y -m y -ba n -f %j_%p -z y"
+options_dcm2niix = "-w 0 -i y -m y -ba n -f %j_%p -z y"
 
 def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
     procedure_class_mr = ProceduresMR()
     for subject_xnat_path in xnat_data_path.glob('*/'):
         num_sessions = len(list(subject_xnat_path.glob('*/')))
         for sessions_xnat_path in subject_xnat_path.glob('*/'):
+            #print(sessions_xnat_path)
             procedure_class_mr.reset_indexes()
-            department = str(sessions_xnat_path).split('/')[-3]
+            department = sessions_xnat_path.parts[-3]
             findings = re.search(subses_pattern, str(sessions_xnat_path), re.X)
             print('subject,', findings.group('prefix_sub'), findings.group('suffix_sub'))
             print('session,', findings.group('prefix_ses'), findings.group('suffix_ses'))
@@ -91,26 +92,29 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
                 '/home/josator2/Documentos/projects/MIDS_reborn/xnat2mids/protocols/protocol_RM_brain_siemens.tsv'
             )
 
-            for scans_path in sessions_xnat_path.rglob('*scans'):
-                scans_path.joinpath("DICOM", "files")
+            for scans_path in sessions_xnat_path.joinpath("scans").iterdir():
+                print(scans_path)
+                print("numero de jsons:", len(list(scans_path.joinpath("resources", "DICOM", "files").glob("*.dcm"))))
 
 
-                folder_nifti = dicom2niix(scans_path, options_dcm2niix)
-                print(f"longitud archivos: {len(list(folder_nifti.iterdir())}")
-                if len(list(folder_nifti.iterdir())) > 0: continue
+                folder_nifti = dicom2niix(scans_path.joinpath("resources", "DICOM", "files"), options_dcm2niix)
+                print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
+                print(list(folder_nifti.iterdir()))
+                if len(list(folder_nifti.iterdir())) == 0: continue
 
 
 
-                dict_json = io_json.load_json(folder_nifti.joinpath(folder_nifti.glob("*.json")[0]))
+
+                dict_json = io_json.load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
 
 
-                modality = dict_json[dict_keys['Modality']].get("Value", ["n/a"])[0]
-                study_description = dict_json[dict_keys['Series Description']].get("Value", ["n/a"])[0]
-                image_type = dict_json[dict_keys['Image Type']].get("Value", ["n/a"])
+                modality = dict_json.get("Modality", "n/a")
+                study_description = dict_json.get("SeriesDescription", "n/a")
+                image_type = dict_json.get("ImageType", "n/a")
                 if modality == "MR":
                     # via BIDS protocols
                     if body_part in ["head", "brain"]:
-                        ProtocolName = dict_json[dict_keys['Protocol Name']].get("Value", ["n/a"])[0]
+                        ProtocolName = dict_json.get("ProtocolName", "n/a")
                         if ProtocolName not in BIOFACE_PROTOCOL_NAMES_DESCARTED:
                             if 'AP' in  ProtocolName:
                                 protocol, acq, dir_, folder_BIDS = ["dwi", None, "AP", "dwi"]
@@ -119,12 +123,12 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
                             else:
                                 print(dict_json)
                                 json_adquisitions = {
-                                    f'{k} (\'{v}\')': dict_json[v].get("Value", ["n/a"])[0] for k, v in dict_mr_keys.items()
+                                    f'{k} (\'{v}\')': dict_json.get(k, "nan") for k, v in dict_mr_keys.items()
                                 }
+                                dir_ = "n/a"
+                                protocol, acq, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
 
-                                protocol, acq, dir_, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
-
-                            print(protocol, acq, folder_BIDS)
+                            print(protocol, acq, dir_, folder_BIDS)
 
                             procedure_class_mr.control_sequences(
                                 folder_nifti, mids_session_path, protocol, acq, dir_, folder_BIDS, body_part

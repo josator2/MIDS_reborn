@@ -28,7 +28,12 @@ def dicom2nii(dicom_path):
 def dicom2niix(folder_json, str_options):
     folder_nifti = folder_json.parent.parent.parent.joinpath("LOCAL_NIFTI", "files")
     folder_nifti.mkdir(parents=True, exist_ok=True)
-    subprocess.call(f"dcm2niix {str_options} -o {folder_nifti} {folder_json.parent}", shell=True)
+    subprocess.call(
+        f"dcm2niix {str_options} -o {folder_nifti} {folder_json.parent}",
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT
+    )
     return folder_nifti
 def dicom2png(dicom_path, nifti_path):
 
