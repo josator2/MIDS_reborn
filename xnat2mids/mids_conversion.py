@@ -98,39 +98,40 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
 
 
                 folder_nifti = dicom2niix(scans_path.joinpath("resources", "DICOM", "files"), options_dcm2niix)
-                print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
-                print(list(folder_nifti.iterdir()))
-                if len(list(folder_nifti.iterdir())) == 0: continue
-
-
-
-
-                dict_json = io_json.load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
-
-
-                modality = dict_json.get("Modality", "n/a")
-                study_description = dict_json.get("SeriesDescription", "n/a")
-                image_type = dict_json.get("ImageType", "n/a")
-                if modality == "MR":
-                    # via BIDS protocols
-                    if body_part in ["head", "brain"]:
-                        ProtocolName = dict_json.get("ProtocolName", "n/a")
-                        if ProtocolName not in BIOFACE_PROTOCOL_NAMES_DESCARTED:
-                            if 'AP' in  ProtocolName:
-                                protocol, acq, dir_, folder_BIDS = ["dwi", None, "AP", "dwi"]
-                            elif 'PA' in ProtocolName:
-                                protocol, acq, dir_, folder_BIDS = ["dwi", None, "PA", "dwi"]
-                            else:
-                                print(dict_json)
-                                json_adquisitions = {
-                                    f'{k} (\'{v}\')': dict_json.get(k, "nan") for k, v in dict_mr_keys.items()
-                                }
-                                dir_ = "n/a"
-                                protocol, acq, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
-
-                            print(protocol, acq, dir_, folder_BIDS)
-
-                            procedure_class_mr.control_sequences(
-                                folder_nifti, mids_session_path, protocol, acq, dir_, folder_BIDS, body_part
-                            )
+        #         print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
+        #         print(list(folder_nifti.iterdir()))
+        #         if len(list(folder_nifti.iterdir())) == 0: continue
+        #
+        #
+        #
+        #
+        #         dict_json = io_json.load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
+        #
+        #
+        #         modality = dict_json.get("Modality", "n/a")
+        #         study_description = dict_json.get("SeriesDescription", "n/a")
+        #         image_type = dict_json.get("ImageType", "n/a")
+        #         if modality == "MR":
+        #             # via BIDS protocols
+        #             if body_part in ["head", "brain"]:
+        #                 ProtocolName = dict_json.get("ProtocolName", "n/a")
+        #                 if ProtocolName not in BIOFACE_PROTOCOL_NAMES_DESCARTED:
+        #                     if 'AP' in  ProtocolName:
+        #                         protocol, acq, dir_, folder_BIDS = ["dwi", None, "AP", "dwi"]
+        #                     elif 'PA' in ProtocolName:
+        #                         protocol, acq, dir_, folder_BIDS = ["dwi", None, "PA", "dwi"]
+        #                     else:
+        #                         print(dict_json)
+        #                         json_adquisitions = {
+        #                             f'{k} (\'{v}\')': dict_json.get(k, "nan") for k, v in dict_mr_keys.items()
+        #                         }
+        #                         dir_ = ''
+        #                         protocol, acq, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
+        #
+        #                     print(protocol, acq, dir_, folder_BIDS)
+        #
+        #                     procedure_class_mr.control_sequences(
+        #                         folder_nifti, mids_session_path, session_name, protocol, acq, dir_, folder_BIDS, body_part
+        #                     )
+        # procedure_class_mr.copy_sessions(subject_name)
 
