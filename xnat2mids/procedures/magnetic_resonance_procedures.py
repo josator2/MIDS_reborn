@@ -1,3 +1,4 @@
+import shutil
 from shutil import copyfile
 
 import nibabel as nib
@@ -44,33 +45,48 @@ class ProceduresMR:
 
         # This is a counter for several nifties in one adquisition
 
-
-        print("processing file -> ", nifti_files)
-        protocol_label = f'_{protocol}'
-        acq_label = f'_acq-{acq}' if acq else ''
-        bp_label = f"" if body_part in body_part_bids else f"_bp-{body_part}"
+        protocol_label = f'{protocol}'
+        acq_label = f'{acq}' if acq else ''
+        bp_label = f"{body_part}"
         vp_label = [
             (
-                f"_desc-{self.get_plane_nib(nifti_file)}"
+                f"{self.get_plane_nib(nifti_file)}"
                 if body_part in body_part_bids
-                else f"_vp-{self.get_plane_nib(nifti_file)}"
+                else f"{self.get_plane_nib(nifti_file)}"
             )
             for nifti_file in nifti_files
         ]
-        key = str([session_name, protocol_label, acq_label, bp_label, dir_, vp_label])
-        value = self.run_dict.get(key, [])
-        value.append([nifti_files, folder_image_mids])
+        key = str([session_name, acq_label, dir_, bp_label, vp_label, protocol_label])
+        value = self.run_dict.get(key, {"runs":[], "folder_mids": None})
+        value['runs'].append(nifti_files)
+        value['folder_mids'] = folder_image_mids
         self.run_dict[key] = value
 
     def copy_sessions(self, subject_name):
-        for key, value in self.run_dict.items():
-
+        for key_str, runs in self.run_dict.items():
+            keys = eval(key_str)
             print("-"*79)
-            list_key = eval(key)
-            print(key, value)
+            print(keys, runs)
             print("-" * 79)
-            list_of_sesions = value
 
+            activate_run = True if len(runs["runs"]) > 1 else False
+            for num_run, run in enumerate(runs["runs"],1):
+
+                activate_nifti_parted = True if len(run) > 1 else False
+                for num_part, partition in enumerate(run,1):
+
+                    dest_file_name = self.calculate_name(
+                        subject_name, keys, num_run, num_part, activate_run, activate_nifti_parted
+                    )
+
+                    print("origen:", partition)
+                    print("destino:", runs["folder_mids"].joinpath(str(dest_file_name) + "".join(partition.suffixes)))
+                    shutil.copyfile(partition, runs["folder_mids"].joinpath(str(dest_file_name) + "".join(partition.suffixes)))
+                other_files = [f for f in partition.parent.iterdir() if "".join(partition.suffixes) not in str(f)]
+                for other_file in other_files:
+                    print("origen:", other_file)
+                    print("destino:", runs["folder_mids"].joinpath(str(dest_file_name) + "".join(other_file.suffixes)))
+                    shutil.copyfile(str(other_file), runs["folder_mids"].joinpath(str(dest_file_name) + "".join(other_file.suffixes)))
 
     def get_plane_nib(self, nifti):
         """
@@ -82,5 +98,20 @@ class ProceduresMR:
         plane = nib.aff2axcodes(img.affine)[2]
         return "ax" if plane in ["S", "I"] else "sag" if plane in ["R", "L"] else "cor"
 
-
+    def calculate_name(self, subject_name, keys, num_run, num_part, activate_run, activate_nifti_parted):
+        print(num_part, activate_nifti_parted)
+        acq = f"{keys[1] if keys[1] else ''}{num_part if activate_nifti_parted else ''}"
+        print(f"{keys=}")
+        return "_".join([
+            part for part in [
+                subject_name,
+                keys[0],
+                f'acq-{acq}' if acq else '',
+                f'dir-{keys[2]}' if keys[2] else '',
+                f'run-{num_run}' if activate_run else '',
+                '' if keys[3] in body_part_bids else f'bp-{keys[3]}',
+                f'desc-{keys[4][num_part-1]}' if keys[3] in body_part_bids else f'vp-{keys[4][num_part-1]}',
+                keys[5]
+            ] if part != ''
+        ])
 

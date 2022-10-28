@@ -1,6 +1,11 @@
 import re
 
-from xnat2mids import io_json
+from collections import defaultdict
+from datetime import datetime
+
+import pandas
+
+from xnat2mids.io_json import load_json
 from xnat2mids.procedures.magnetic_resonance_procedures import ProceduresMR
 from xnat2mids.protocols.scans_tagger import Tagger
 from xnat2mids.dicom_converters import dicom2niix
@@ -68,7 +73,7 @@ BIOFACE_PROTOCOL_NAMES_DESCARTED = [
     '3D-T2-FLAIR SAG NUEVO-1'
 ]
 
-options_dcm2niix = "-w 0 -i y -m y -ba n -f %j_%p -z y"
+options_dcm2niix = "-w 0 -i y -m y -ba n -f %x_%s_%u -z y"
 
 def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
     procedure_class_mr = ProceduresMR()
@@ -76,6 +81,7 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
         num_sessions = len(list(subject_xnat_path.glob('*/')))
         for sessions_xnat_path in subject_xnat_path.glob('*/'):
             #print(sessions_xnat_path)
+
             procedure_class_mr.reset_indexes()
             department = sessions_xnat_path.parts[-3]
             findings = re.search(subses_pattern, str(sessions_xnat_path), re.X)
@@ -93,45 +99,86 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
             )
 
             for scans_path in sessions_xnat_path.joinpath("scans").iterdir():
-                print(scans_path)
-                print("numero de jsons:", len(list(scans_path.joinpath("resources", "DICOM", "files").glob("*.dcm"))))
+                #print(scans_path)
+                #print("numero de jsons:", len(list(scans_path.joinpath("resources", "DICOM", "files").glob("*.dcm"))))
 
 
                 folder_nifti = dicom2niix(scans_path.joinpath("resources", "DICOM", "files"), options_dcm2niix)
-        #         print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
-        #         print(list(folder_nifti.iterdir()))
-        #         if len(list(folder_nifti.iterdir())) == 0: continue
-        #
-        #
-        #
-        #
-        #         dict_json = io_json.load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
-        #
-        #
-        #         modality = dict_json.get("Modality", "n/a")
-        #         study_description = dict_json.get("SeriesDescription", "n/a")
-        #         image_type = dict_json.get("ImageType", "n/a")
-        #         if modality == "MR":
-        #             # via BIDS protocols
-        #             if body_part in ["head", "brain"]:
-        #                 ProtocolName = dict_json.get("ProtocolName", "n/a")
-        #                 if ProtocolName not in BIOFACE_PROTOCOL_NAMES_DESCARTED:
-        #                     if 'AP' in  ProtocolName:
-        #                         protocol, acq, dir_, folder_BIDS = ["dwi", None, "AP", "dwi"]
-        #                     elif 'PA' in ProtocolName:
-        #                         protocol, acq, dir_, folder_BIDS = ["dwi", None, "PA", "dwi"]
-        #                     else:
-        #                         print(dict_json)
-        #                         json_adquisitions = {
-        #                             f'{k} (\'{v}\')': dict_json.get(k, "nan") for k, v in dict_mr_keys.items()
-        #                         }
-        #                         dir_ = ''
-        #                         protocol, acq, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
-        #
-        #                     print(protocol, acq, dir_, folder_BIDS)
-        #
-        #                     procedure_class_mr.control_sequences(
-        #                         folder_nifti, mids_session_path, session_name, protocol, acq, dir_, folder_BIDS, body_part
-        #                     )
-        # procedure_class_mr.copy_sessions(subject_name)
+                #print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
+                #print(list(folder_nifti.iterdir()))
+                if len(list(folder_nifti.iterdir())) == 0: continue
 
+                dict_json = load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
+
+
+                modality = dict_json.get("Modality", "n/a")
+                study_description = dict_json.get("SeriesDescription", "n/a")
+                ProtocolName = dict_json.get("ProtocolName", "n/a")
+                image_type = dict_json.get("ImageType", "n/a")
+                if modality == "MR":
+                    # via BIDS protocols
+                    if body_part in ["head", "brain"]:
+
+                        if ProtocolName not in BIOFACE_PROTOCOL_NAMES_DESCARTED:
+                            if 'AP' in  ProtocolName:
+                                protocol, acq, dir_, folder_BIDS = ["dwi", None, "AP", "dwi"]
+                            elif 'PA' in ProtocolName:
+                                protocol, acq, dir_, folder_BIDS = ["dwi", None, "PA", "dwi"]
+                            else:
+                                json_adquisitions = {
+                                    f'{k}': dict_json.get(k, -1) for k in dict_mr_keys.keys()
+                                }
+                                dir_ = ''
+                                #print(f"{ProtocolName=}")
+                                protocol, acq, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
+                                #print(protocol, acq, folder_BIDS)
+                            procedure_class_mr.control_sequences(
+                                folder_nifti, mids_session_path, session_name, protocol, acq, dir_, folder_BIDS, body_part
+                            )
+        procedure_class_mr.copy_sessions(subject_name)
+
+participants_header = ['participant', 'modalities', 'body_parts', 'patient_birthday', 'age', 'gender']
+participants_keys = ['Modality', 'BodyPartExamined', 'PatientBirthDate', 'PatientSex', 'AcquisitionDateTime']
+session_header = ['session', 'acquisition_date_Time',]
+def create_tsvs(xnat_data_path, mids_data_path):
+    """
+        This function allows the user to create a table in format ".tsv"
+        whit a information of subject
+        """
+    
+    list_information= []
+    for subject_path in mids_data_path.glob('*/'):
+        if not subject_path.match("sub-*"): continue
+        subject = subject_path.parts[-1]
+        for session_path in subject_path.glob('*/'):
+            if not session_path.match("ses-*"): continue
+            session = session_path.parts[-1]
+            modalities = []
+            body_parts = []
+            patient_birthday = None
+            patient_ages = list([])
+            patient_sex = None
+            adquisition_date_time = None
+            for json_pathfile in subject_path.glob('**/*.json'):
+                json_file = load_json(json_pathfile)
+                print(json_file)
+                modalities.append(json_file[participants_keys[0]])
+                body_parts.append(json_file[participants_keys[1]])
+                patient_birthday = datetime.fromisoformat(json_file[participants_keys[2]])
+                patient_sex = json_file[participants_keys[3]]
+                adquisition_date_time = datetime.fromisoformat(json_file[participants_keys[4]].split('T')[0])
+                patient_ages.append(int((adquisition_date_time - patient_birthday).days / (365.25)))
+            patient_ages = sorted(list(set(patient_ages)))
+            modalities = sorted(list(set(modalities)))
+            body_parts = sorted(list(set(body_parts)))
+        list_information.append({
+            key:value
+            for key, value in zip(
+                participants_header,
+                [subject, modalities, body_parts, str(patient_birthday.date()), patient_ages, patient_sex]
+            )
+        })
+    print(list_information)
+    pandas.DataFrame.from_dict(list_information).to_csv(
+        mids_data_path.joinpath("participants.tsv"), sep="\t", index=False
+    )

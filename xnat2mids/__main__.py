@@ -75,6 +75,7 @@ from xnat2mids.variables import reset_terminal
 from xnat2mids.variables import dict_paths
 from xnat2mids.variables import dict_uris
 from xnat2mids.mids_conversion import  create_directory_mids_v1
+from xnat2mids.mids_conversion import create_tsvs
 
 
 ###############################################################################
@@ -208,17 +209,15 @@ def main():
         # for each project choice
         for xnat_project in project_list:
             print("MIDS are generating...")
-            create_directory_mids_v1(
-                xnat_data_path.joinpath(xnat_project),
-                mids_data_path,
-                body_part
-            )
-
-            # print("participats tsv are generating...")
-            # MIDS_funtions.create_participants_tsv(
-            #     os.path.join(mids_data_path, xnat_project)
+            # create_directory_mids_v1(
+            #     xnat_data_path.joinpath(xnat_project),
+            #     mids_data_path,
+            #     body_part
             # )
-            #
+
+            print("participats tsv are generating...")
+            create_tsvs(xnat_data_path.joinpath(xnat_project), mids_data_path.joinpath(xnat_project))
+
             # print("scan tsv are generating...")
             # MIDS_funtions.create_scans_tsv(
             #     os.path.join(mids_data_path, xnat_project)
