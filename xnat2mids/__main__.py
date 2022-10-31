@@ -151,8 +151,8 @@ def main():
     parser.add_argument('-i ', '--input', type=str,
                         help="""the directory where the files will
                             be downloaded.""")
-    parser.add_argument('-o ', '--output', type=str,
-                        help='Directory where the MIDS model is applied.')
+    # parser.add_argument('-o ', '--output', type=str,
+    #                     help='Directory where the MIDS model is applied.')
     parser.add_argument('-p ', '--projects', nargs='*', default=None, type=str,
                         help="""The project name to download, if the project is
                             omitted,the aplication show all projects in xnat
@@ -178,8 +178,8 @@ def main():
     print(args)
     page = args.web
     user = args.user
-    xnat_data_path = Path(args.input) if args.input else None
-    mids_data_path = Path(args.output) if args.output else None
+    xnat_data_path = Path(args.input)
+    mids_data_path = Path(args.input)
     project_list = args.projects
     verbose = args.verbose
     body_part = args.body_part
@@ -208,15 +208,17 @@ def main():
         mids_data_path.mkdir(exist_ok=True)
         # for each project choice
         for xnat_project in project_list:
+            xnat_data_path = xnat_data_path.joinpath(xnat_project,"sourcedata")
+            mids_data_path = mids_data_path.joinpath(xnat_project)
             print("MIDS are generating...")
-            # create_directory_mids_v1(
-            #     xnat_data_path.joinpath(xnat_project),
-            #     mids_data_path,
-            #     body_part
-            # )
+            create_directory_mids_v1(
+                xnat_data_path,
+                mids_data_path,
+                body_part
+            )
 
             print("participats tsv are generating...")
-            create_tsvs(xnat_data_path.joinpath(xnat_project), mids_data_path.joinpath(xnat_project))
+            create_tsvs(xnat_data_path, mids_data_path)
 
             # print("scan tsv are generating...")
             # MIDS_funtions.create_scans_tsv(

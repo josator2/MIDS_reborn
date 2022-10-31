@@ -24,6 +24,7 @@ class ProceduresMR:
              "" if body_part in body_part_bids else "mim-mr",
             folder_BIDS
         )
+        print(f'{folder_image_mids=}')
         folder_image_mids.mkdir(parents=True, exist_ok=True)
 
 

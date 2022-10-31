@@ -78,8 +78,10 @@ options_dcm2niix = "-w 0 -i y -m y -ba n -f %x_%s_%u -z y"
 def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
     procedure_class_mr = ProceduresMR()
     for subject_xnat_path in xnat_data_path.glob('*/'):
+        if "_S" not in subject_xnat_path.name:continue
         num_sessions = len(list(subject_xnat_path.glob('*/')))
         for sessions_xnat_path in subject_xnat_path.glob('*/'):
+            if "_E" not in sessions_xnat_path.name: continue
             #print(sessions_xnat_path)
 
             procedure_class_mr.reset_indexes()
@@ -104,8 +106,8 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
 
 
                 folder_nifti = dicom2niix(scans_path.joinpath("resources", "DICOM", "files"), options_dcm2niix)
-                #print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
-                #print(list(folder_nifti.iterdir()))
+                # print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
+                # print(list(folder_nifti.iterdir()))
                 if len(list(folder_nifti.iterdir())) == 0: continue
 
                 dict_json = load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
