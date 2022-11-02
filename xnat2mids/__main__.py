@@ -210,6 +210,9 @@ def main():
         for xnat_project in project_list:
             xnat_data_path = xnat_data_path.joinpath(xnat_project,"sourcedata")
             mids_data_path = mids_data_path.joinpath(xnat_project)
+            print(f"{xnat_data_path}")
+            print(f"{mids_data_path}")
+
             print("MIDS are generating...")
             create_directory_mids_v1(
                 xnat_data_path,

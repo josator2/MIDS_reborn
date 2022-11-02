@@ -19,7 +19,8 @@ class ProceduresMR:
     def control_sequences(
         self, folder_nifti, mids_session_path, session_name,  protocol, acq, dir_, folder_BIDS, body_part
     ):
-
+        print(f'{folder_nifti=}')
+        print(f'{mids_session_path=}')
         folder_image_mids = mids_session_path.joinpath(
              "" if body_part in body_part_bids else "mim-mr",
             folder_BIDS

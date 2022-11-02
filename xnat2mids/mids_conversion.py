@@ -85,16 +85,15 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
             #print(sessions_xnat_path)
 
             procedure_class_mr.reset_indexes()
-            department = sessions_xnat_path.parts[-3]
             findings = re.search(subses_pattern, str(sessions_xnat_path), re.X)
             print('subject,', findings.group('prefix_sub'), findings.group('suffix_sub'))
             print('session,', findings.group('prefix_ses'), findings.group('suffix_ses'))
             subject_name = f"sub-{findings.group('prefix_sub')}S{findings.group('suffix_sub')}"
             session_name = f"ses-{findings.group('prefix_ses')}S{findings.group('suffix_ses')}"
 
-            mids_session_path = mids_data_path.joinpath(department, subject_name, session_name)
+            mids_session_path = mids_data_path.joinpath(subject_name, session_name)
             xml_session_rois = list(sessions_xnat_path.rglob('*.xml'))
-
+            print(f"1: {mids_session_path=}")
             tagger = Tagger()
             tagger.load_table_protocol(
                 '/home/josator2/Documentos/projects/MIDS_reborn/xnat2mids/protocols/protocol_RM_brain_siemens.tsv'
