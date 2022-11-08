@@ -96,7 +96,7 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
             print(f"1: {mids_session_path=}")
             tagger = Tagger()
             tagger.load_table_protocol(
-                '/home/josator2/Documentos/projects/MIDS_reborn/xnat2mids/protocols/protocol_RM_brain_siemens.tsv'
+                './xnat2mids/protocols/protocol_RM_brain_siemens.tsv'
             )
 
             for scans_path in sessions_xnat_path.joinpath("scans").iterdir():

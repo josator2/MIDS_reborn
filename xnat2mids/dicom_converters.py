@@ -34,14 +34,18 @@ def dicom2niix(folder_json, str_options):
         stderr=subprocess.STDOUT
     )
     return folder_nifti
-def dicom2png(dicom_path, nifti_path):
-
-    sitk_img = sitk.ReadImage(path_to_dicom)
-    #img = sitk.GetArrayFromImage(sitk_img)[0, :, :]
-    sitk.WriteImage(sitk_img, path_to_png)
-    save_dicom_metadata(
-        dicom_path, nifti_path.parent.joinpath(nifti_path.name.split(".")[0] + ".json")
+def dicom2png(folder_json, str_options):
+    folder_png = folder_json.parent.parent.parent.joinpath("LOCAL_PNG", "files")
+    folder_png.mkdir(parents=True, exist_ok=True)
+    sitk_img = sitk.ReadImage(folder_json)
+    sitk.WriteImage(sitk_img, folder_png)
+    subprocess.call(
+        f"dcm2niix {str_options} -o {folder_png} {folder_json.parent}",
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT
     )
+
 
 # def save_dicom_metadata(dicom_path, json_path):
 #
