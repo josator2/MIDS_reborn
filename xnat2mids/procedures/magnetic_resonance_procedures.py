@@ -51,13 +51,10 @@ class ProceduresMR:
         acq_label = f'{acq}' if acq else ''
         bp_label = f"{body_part}"
         vp_label = [
-            (
-                f"{self.get_plane_nib(nifti_file)}"
-                if body_part in body_part_bids
-                else f"{self.get_plane_nib(nifti_file)}"
-            )
-            for nifti_file in nifti_files
+            f"{self.get_plane_nib(nifti_file)}" for nifti_file in nifti_files
         ]
+        print("*"*79)
+        print(vp_label)
         key = str([session_name, acq_label, dir_, bp_label, vp_label, protocol_label])
         value = self.run_dict.get(key, {"runs":[], "folder_mids": None})
         value['runs'].append(nifti_files)
@@ -97,7 +94,7 @@ class ProceduresMR:
         """
 
         img = nib.load(nifti)
-        plane = nib.aff2axcodes(img.affine)[2]
+        plane = nib.orientations.aff2axcodes(img.affine)[2]
         return "ax" if plane in ["S", "I"] else "sag" if plane in ["R", "L"] else "cor"
 
     def calculate_name(self, subject_name, keys, num_run, num_part, activate_run, activate_nifti_parted):

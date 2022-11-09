@@ -1,6 +1,7 @@
-import SimpleITK as sitk
 import subprocess
 
+import SimpleITK as sitk
+import pydicom
 
 # def sitk_dicom2mifti(dicom_path):
 #     reader = sitk.ImageSeriesReader()
@@ -27,12 +28,18 @@ import subprocess
 def dicom2niix(folder_json, str_options):
     folder_nifti = folder_json.parent.parent.parent.joinpath("LOCAL_NIFTI", "files")
     folder_nifti.mkdir(parents=True, exist_ok=True)
+    print(folder_json.parent)
     subprocess.call(
-        f"dcm2niix {str_options} -o {folder_nifti} {folder_json.parent}",
+        f"dcm2niix {str_options} -o {folder_nifti} {folder_json}",
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT
     )
+    if len(list(folder_nifti.iterdir())) == 0:
+        # folder_nifti.parent.unlink(missing_ok=True)
+        return folder_nifti
+    list_tags = []
+    add_dicom_metadata(folder_json, folder_nifti, list_tags)
     return folder_nifti
 def dicom2png(folder_json, str_options):
     folder_png = folder_json.parent.parent.parent.joinpath("LOCAL_PNG", "files")
@@ -47,15 +54,21 @@ def dicom2png(folder_json, str_options):
     )
 
 
-# def save_dicom_metadata(dicom_path, json_path):
-#
-#     dicom = dicom2nifti.common.read_dicom_directory(dicom_path, stop_before_pixels=True)
-#     try:
-#         string_json = dicom.to_json()
-#     except TypeError as e:
-#         string_json = "{}"
-#     dict_json = json.loads(string_json)
-#     string_json = json.dumps(dict_json, default=lambda o: o.__dict__,
-#                              sort_keys=True)
-#     with open(json_path, 'w') as dicom_file:
-#         dicom_file.write(string_json)
+def add_dicom_metadata(folder_json, folder_nifti, list_tags):
+
+    dicom_dir = pydicom.filereader.dcmread(str(list(folder_json.glob("*.dcm"))[0]), stop_before_pixels=True)
+    print(list(dicom_dir.keys()))
+    print({str(dicom_dir.get(key).name): dicom_dir.get(key).value for key in [(0x0028, 0x0010),(0x0028, 0x0011)]})
+    #dicom = dcmread(folder_json, stop_before_pixels=True)
+    try:
+        string_json = pydicom.to_json()
+    except TypeError as e:
+        string_json = "{}"
+    dict_dicom_meta = json.loads(string_json)
+
+
+    string_json = json.dumps(dict_json, default=lambda o: o.__dict__,
+                             sort_keys=True)
+    with open(json_path, 'w') as dicom_file:
+        dicom_file.write(string_json)
+
