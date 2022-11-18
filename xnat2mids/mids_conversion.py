@@ -25,13 +25,13 @@ dict_mr_keys = {
     'ScanningSequence': '00180020',
     'SequenceVariant': '00180021',
     'ScanOptions': '00180022',
+    'ImageType': '00080008',
     'AngioFlag': '00180025',
     'MagneticFieldStrength': '00180087',
     'RepetitionTime': '00180080',
     'InversionTime': '00180082',
     'FlipAngle': '00181314',
     'EchoTime': '00180081',
-    'SliceThickness': '00180050',
 }
 
 BIOFACE_PROTOCOL_NAMES = [
@@ -120,22 +120,23 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
                     # via BIDS protocols
                     if body_part in ["head", "brain"]:
 
-                        if ProtocolName not in BIOFACE_PROTOCOL_NAMES_DESCARTED:
+                        if 'DIFFUSION' in image_type:
                             if 'AP' in  ProtocolName:
-                                protocol, acq, dir_, folder_BIDS = ["dwi", None, "AP", "dwi"]
+                                protocol, acq, dir_, part, folder_BIDS = ["dwi", None, "AP", None, "dwi"]
                             elif 'PA' in ProtocolName:
-                                protocol, acq, dir_, folder_BIDS = ["dwi", None, "PA", "dwi"]
-                            else:
-                                json_adquisitions = {
-                                    f'{k}': dict_json.get(k, -1) for k in dict_mr_keys.keys()
-                                }
-                                dir_ = ''
-                                #print(f"{ProtocolName=}")
-                                protocol, acq, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
-                                #print(protocol, acq, folder_BIDS)
-                            procedure_class_mr.control_sequences(
-                                folder_nifti, mids_session_path, session_name, protocol, acq, dir_, folder_BIDS, body_part
-                            )
+                                protocol, acq, dir_, part, folder_BIDS = ["dwi", None, "PA", None, "dwi"]
+                        #elif 'PHASE' in image_type:
+                        #    protocol, acq, dir_, part, folder_BIDS = ["T2w", "swi" , None, "pha" ,"dwi"]
+                        else:
+                            json_adquisitions = {
+                                f'{k}': dict_json.get(k, -1) for k in dict_mr_keys.keys()
+                            }
+                            #print(f"{ProtocolName=}")
+                            protocol, acq, dir_, part, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
+                            #print(protocol, acq, folder_BIDS)
+                        procedure_class_mr.control_sequences(
+                            folder_nifti, mids_session_path, session_name, protocol, acq, dir_, part, folder_BIDS, body_part
+                        )
         procedure_class_mr.copy_sessions(subject_name)
 
 participants_header = ['participant', 'modalities', 'body_parts', 'patient_birthday', 'age', 'gender']

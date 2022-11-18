@@ -1,3 +1,4 @@
+import json
 import shutil
 from shutil import copyfile
 
@@ -17,7 +18,7 @@ class ProceduresMR:
 
 
     def control_sequences(
-        self, folder_nifti, mids_session_path, session_name,  protocol, acq, dir_, folder_BIDS, body_part
+        self, folder_nifti, mids_session_path, session_name,  protocol, acq, dir_, part, folder_BIDS, body_part
     ):
         print(f'{folder_nifti=}')
         print(f'{mids_session_path=}')
@@ -28,19 +29,8 @@ class ProceduresMR:
         print(f'{folder_image_mids=}')
         folder_image_mids.mkdir(parents=True, exist_ok=True)
 
-
-
-        self.control_image(folder_nifti, folder_image_mids, session_name, protocol, acq, dir_, body_part)
-
-    def control_image(self, nifti_path, folder_image_mids, session_name, protocol, acq, dir_, body_part):
-
-        """
-
-        """
-
-
         # Search all nifti files in the old folder and sort them
-        nifti_files = sorted([i for i in nifti_path.glob("*.nii.gz")])
+        nifti_files = sorted([i for i in folder_nifti.glob("*.nii.gz")])
 
         len_nifti_files = len(nifti_files)
         if len_nifti_files == 0: return
@@ -49,13 +39,16 @@ class ProceduresMR:
 
         protocol_label = f'{protocol}'
         acq_label = f'{acq}' if acq else ''
+        part_label = f'{part}' if acq else ''
         bp_label = f"{body_part}"
         vp_label = [
             f"{self.get_plane_nib(nifti_file)}" for nifti_file in nifti_files
         ]
         print("*"*79)
         print(vp_label)
-        key = str([session_name, acq_label, dir_, bp_label, vp_label, protocol_label])
+        key = json.dumps([session_name, acq_label, dir_, part_label, bp_label, vp_label, protocol_label])
+        print("&"*79)
+        print(f"{key}")
         value = self.run_dict.get(key, {"runs":[], "folder_mids": None})
         value['runs'].append(nifti_files)
         value['folder_mids'] = folder_image_mids
@@ -63,7 +56,7 @@ class ProceduresMR:
 
     def copy_sessions(self, subject_name):
         for key_str, runs in self.run_dict.items():
-            keys = eval(key_str)
+            keys = json.loads(key_str)
             print("-"*79)
             print(keys, runs)
             print("-" * 79)
@@ -100,7 +93,6 @@ class ProceduresMR:
     def calculate_name(self, subject_name, keys, num_run, num_part, activate_run, activate_nifti_parted):
         print(num_part, activate_nifti_parted)
         acq = f"{keys[1] if keys[1] else ''}{num_part if activate_nifti_parted else ''}"
-        print(f"{keys=}")
         return "_".join([
             part for part in [
                 subject_name,
@@ -108,9 +100,10 @@ class ProceduresMR:
                 f'acq-{acq}' if acq else '',
                 f'dir-{keys[2]}' if keys[2] else '',
                 f'run-{num_run}' if activate_run else '',
-                '' if keys[3] in body_part_bids else f'bp-{keys[3]}',
-                f'desc-{keys[4][num_part-1]}' if keys[3] in body_part_bids else f'vp-{keys[4][num_part-1]}',
-                keys[5]
+                f'part-{keys[3]}' if keys[3] else '',
+                '' if keys[4] in body_part_bids else f'bp-{keys[4]}',
+                f'desc-{keys[5][num_part-1]}' if keys[4] in body_part_bids else f'vp-{keys[5][num_part-1]}',
+                keys[6]
             ] if part != ''
         ])
 
