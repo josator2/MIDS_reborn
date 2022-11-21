@@ -47,7 +47,7 @@ def dicom2png(folder_json, str_options):
     sitk_img = sitk.ReadImage(folder_json)
     sitk.WriteImage(sitk_img, folder_png)
     subprocess.call(
-        f"dcm2niix {str_options} -o {folder_png} {folder_json.parent}",
+        f"dcm2niix {str_options} -b o -o {folder_png} {folder_json.parent}",
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT
@@ -55,27 +55,20 @@ def dicom2png(folder_json, str_options):
 
 
 def add_dicom_metadata(
-        folder_json, folder_nifti, list_tags = [(0x0028, 0x0010), (0x0028, 0x0011), (0x0028, 0x1050), (0x0028, 0x1051)]
+        folder_json, folder_nifti, list_tags = [(0x0028, 0x0010), (0x0028, 0x0011), (0x0028, 0x1050), (0x0028, 0x1051), (0x0018,0x5100) ]
 ):
 
     json_filepath = list(folder_nifti.glob("*.json"))[0]
     with json_filepath.open("r") as file_json:
         dict_json = json.loads(file_json.read())
-
     dicom_dir = pydicom.filereader.dcmread(str(list(folder_json.glob("*.dcm"))[0]), stop_before_pixels=True)
-
-
     extract_values = {
         dicom_dir.get(key).name:(
             dicom_dir.get(key).value if not dicom_dir.get(key).is_empty else "NaN"
         )
         for key in list_tags
     }
-
     actualized_dict_json = dict(dict_json ,**extract_values)
-
-
-
     string_json = json.dumps(actualized_dict_json, default=lambda o: o.__dict__,
                              sort_keys=True)
     with json_filepath.open('w') as dicom_file:

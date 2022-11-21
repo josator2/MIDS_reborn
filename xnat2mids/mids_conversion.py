@@ -121,12 +121,10 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
                     if body_part in ["head", "brain"]:
 
                         if 'DIFFUSION' in image_type:
-                            if 'AP' in  ProtocolName:
+                            if 'AP' in ProtocolName:
                                 protocol, acq, dir_, part, folder_BIDS = ["dwi", None, "AP", None, "dwi"]
                             elif 'PA' in ProtocolName:
                                 protocol, acq, dir_, part, folder_BIDS = ["dwi", None, "PA", None, "dwi"]
-                        #elif 'PHASE' in image_type:
-                        #    protocol, acq, dir_, part, folder_BIDS = ["T2w", "swi" , None, "pha" ,"dwi"]
                         else:
                             json_adquisitions = {
                                 f'{k}': dict_json.get(k, -1) for k in dict_mr_keys.keys()
