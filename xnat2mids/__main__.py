@@ -214,11 +214,11 @@ def main():
             print(f"{mids_data_path}")
 
             print("MIDS are generating...")
-            create_directory_mids_v1(
-                xnat_data_path,
-                mids_data_path,
-                body_part
-            )
+            # create_directory_mids_v1(
+            #     xnat_data_path,
+            #     mids_data_path,
+            #     body_part
+            # )
 
             print("participats tsv are generating...")
             create_tsvs(xnat_data_path, mids_data_path)

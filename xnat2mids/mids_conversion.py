@@ -140,6 +140,8 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
 participants_header = ['participant', 'modalities', 'body_parts', 'patient_birthday', 'age', 'gender']
 participants_keys = ['Modality', 'BodyPartExamined', 'PatientBirthDate', 'PatientSex', 'AcquisitionDateTime']
 session_header = ['session', 'acquisition_date_Time',]
+find_time = "(?P<year>\d+)-(?P<month>\d+)-(?P<day>\d+)T(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+).(?P<milisecond>\d+)"
+reg_find_time =
 def create_tsvs(xnat_data_path, mids_data_path):
     """
         This function allows the user to create a table in format ".tsv"
@@ -166,7 +168,10 @@ def create_tsvs(xnat_data_path, mids_data_path):
                 body_parts.append(json_file[participants_keys[1]])
                 patient_birthday = datetime.fromisoformat(json_file[participants_keys[2]])
                 patient_sex = json_file[participants_keys[3]]
-                adquisition_date_time = datetime.fromisoformat(json_file[participants_keys[4]].split('T')[0])
+                try:
+
+                adquisition_date_time = datetime.fromisoformat(json_file[participants_keys[4]])
+
                 patient_ages.append(int((adquisition_date_time - patient_birthday).days / (365.25)))
             patient_ages = sorted(list(set(patient_ages)))
             modalities = sorted(list(set(modalities)))
@@ -182,3 +187,4 @@ def create_tsvs(xnat_data_path, mids_data_path):
     pandas.DataFrame.from_dict(list_information).to_csv(
         mids_data_path.joinpath("participants.tsv"), sep="\t", index=False
     )
+

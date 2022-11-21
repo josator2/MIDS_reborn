@@ -68,7 +68,7 @@ def add_dicom_metadata(
         )
         for key in list_tags
     }
-    actualized_dict_json = dict(dict_json ,**extract_values)
+    actualized_dict_json = dict(dict_json, **extract_values)
     string_json = json.dumps(actualized_dict_json, default=lambda o: o.__dict__,
                              sort_keys=True)
     with json_filepath.open('w') as dicom_file:
