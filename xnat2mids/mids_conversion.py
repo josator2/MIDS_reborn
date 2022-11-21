@@ -16,8 +16,8 @@ dict_keys = {
     'SeriesDescription': '0008103E',
     'ProtocolName': '00181030',
     'ComplexImage Component Attribute': '00089208',
-    "ImageType" :'00080008',
-    #"difusion Directionality": ''
+    "ImageType": '00080008',
+    # "difusion Directionality": ''
 }
 
 dict_mr_keys = {
@@ -41,25 +41,25 @@ BIOFACE_PROTOCOL_NAMES = [
     'ADVANCED_ASL',
     'AXIAL T2 TSE FS',
     'AX_T2_STAR',
-    'DTIep2d_diff_mddw_48dir_p3_AP', #
-    'DTIep2d_diff_mddw_4b0_PA', #
+    'DTIep2d_diff_mddw_48dir_p3_AP',  #
+    'DTIep2d_diff_mddw_4b0_PA',  #
     'EPAD-3D-SWI',
-    'EPAD-B0-RevPE', # PA
+    'EPAD-B0-RevPE',  # PA
     'EPAD-SE-fMRI',
     'EPAD-SE-fMRI-RevPE',
-    'EPAD-SingleShell-DTI48', # AP
+    'EPAD-SingleShell-DTI48',  # AP
     'EPAD-rsfMRI (Eyes Open)',
-    'MPRAGE_GRAPPA2', # T1 mprage
+    'MPRAGE_GRAPPA2',  # T1 mprage
     'asl_3d_tra_iso_3.0_highres',
     'pd+t2_tse_tra_p2_3mm',
-    't1_mprage_sag_p2_iso', # t1
-    't2_space_dark-fluid_sag_p2_iso', # flair
+    't1_mprage_sag_p2_iso',  # t1
+    't2_space_dark-fluid_sag_p2_iso',  # flair
     't2_swi_tra_p2_384_2mm'
 ]
 
 BIOFACE_PROTOCOL_NAMES_DESCARTED = [
-    #'DTIep2d_diff_mddw_48dir_p3_AP',
-    #'DTIep2d_diff_mddw_4b0_PA',
+    # 'DTIep2d_diff_mddw_48dir_p3_AP',
+    # 'DTIep2d_diff_mddw_4b0_PA',
     'EPAD-B0-RevPE',
     'EPAD-SingleShell-DTI48',
     'EPAD-3D-SWI',
@@ -75,14 +75,15 @@ BIOFACE_PROTOCOL_NAMES_DESCARTED = [
 
 options_dcm2niix = "-w 0 -i y -m y -ba n -f %x_%s_%u -z y"
 
+
 def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
     procedure_class_mr = ProceduresMR()
     for subject_xnat_path in xnat_data_path.glob('*/'):
-        if "_S" not in subject_xnat_path.name:continue
+        if "_S" not in subject_xnat_path.name: continue
         num_sessions = len(list(subject_xnat_path.glob('*/')))
         for sessions_xnat_path in subject_xnat_path.glob('*/'):
             if "_E" not in sessions_xnat_path.name: continue
-            #print(sessions_xnat_path)
+            # print(sessions_xnat_path)
 
             procedure_class_mr.reset_indexes()
             findings = re.search(subses_pattern, str(sessions_xnat_path), re.X)
@@ -100,9 +101,8 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
             )
 
             for scans_path in sessions_xnat_path.joinpath("scans").iterdir():
-                #print(scans_path)
-                #print("numero de jsons:", len(list(scans_path.joinpath("resources", "DICOM", "files").glob("*.dcm"))))
-
+                # print(scans_path)
+                # print("numero de jsons:", len(list(scans_path.joinpath("resources", "DICOM", "files").glob("*.dcm"))))
 
                 folder_nifti = dicom2niix(scans_path.joinpath("resources", "DICOM", "files"), options_dcm2niix)
                 # print(f"longitud archivos en {folder_nifti}: {len(list(folder_nifti.iterdir()))}")
@@ -110,7 +110,6 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
                 if len(list(folder_nifti.iterdir())) == 0: continue
 
                 dict_json = load_json(folder_nifti.joinpath(list(folder_nifti.glob("*.json"))[0]))
-
 
                 modality = dict_json.get("Modality", "n/a")
                 study_description = dict_json.get("SeriesDescription", "n/a")
@@ -129,29 +128,35 @@ def create_directory_mids_v1(xnat_data_path, mids_data_path, body_part):
                             json_adquisitions = {
                                 f'{k}': dict_json.get(k, -1) for k in dict_mr_keys.keys()
                             }
-                            #print(f"{ProtocolName=}")
+                            # print(f"{ProtocolName=}")
                             protocol, acq, dir_, part, folder_BIDS = tagger.classification_by_min_max(json_adquisitions)
-                            #print(protocol, acq, folder_BIDS)
+                            # print(protocol, acq, folder_BIDS)
                         procedure_class_mr.control_sequences(
-                            folder_nifti, mids_session_path, session_name, protocol, acq, dir_, part, folder_BIDS, body_part
+                            folder_nifti, mids_session_path, session_name, protocol, acq, dir_, part, folder_BIDS,
+                            body_part
                         )
         procedure_class_mr.copy_sessions(subject_name)
 
+
 participants_header = ['participant', 'modalities', 'body_parts', 'patient_birthday', 'age', 'gender']
 participants_keys = ['Modality', 'BodyPartExamined', 'PatientBirthDate', 'PatientSex', 'AcquisitionDateTime']
-session_header = ['session', 'acquisition_date_Time',]
+session_header = ['session', 'acquisition_date_time', 'age', 'radiological_reports']
 find_time = "(?P<year>\d+)-(?P<month>\d+)-(?P<day>\d+)T(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+).(?P<milisecond>\d+)"
-reg_find_time =
+reg_find_time = re.compile(find_time, re.I)
+
+
 def create_tsvs(xnat_data_path, mids_data_path):
     """
         This function allows the user to create a table in format ".tsv"
         whit a information of subject
         """
-    
-    list_information= []
+
+    patient_list = []
+
     for subject_path in mids_data_path.glob('*/'):
         if not subject_path.match("sub-*"): continue
         subject = subject_path.parts[-1]
+        session_list = []
         for session_path in subject_path.glob('*/'):
             if not session_path.match("ses-*"): continue
             session = session_path.parts[-1]
@@ -161,6 +166,7 @@ def create_tsvs(xnat_data_path, mids_data_path):
             patient_ages = list([])
             patient_sex = None
             adquisition_date_time = None
+            adquisition_list = []
             for json_pathfile in subject_path.glob('**/*.json'):
                 json_file = load_json(json_pathfile)
                 print(json_file)
@@ -168,23 +174,37 @@ def create_tsvs(xnat_data_path, mids_data_path):
                 body_parts.append(json_file[participants_keys[1]])
                 patient_birthday = datetime.fromisoformat(json_file[participants_keys[2]])
                 patient_sex = json_file[participants_keys[3]]
-                try:
-
-                adquisition_date_time = datetime.fromisoformat(json_file[participants_keys[4]])
-
-                patient_ages.append(int((adquisition_date_time - patient_birthday).days / (365.25)))
+                f = reg_find_time.search(json_file[participants_keys[4]])
+                acquisition_date_time = datetime.fromisoformat(
+                    f"{f.group('year').zfill(4)}-{f.group('month').zfill(2)}-{f.group('day').zfill(2)}T" +
+                    f"{f.group('hour').zfill(2)}:{f.group('minute').zfill(2)}:{f.group('second').zfill(2)}.{f.group('milisecond')}"
+                )
+                patient_ages.append(int((acquisition_date_time - patient_birthday).days / (365.25)))
             patient_ages = sorted(list(set(patient_ages)))
             modalities = sorted(list(set(modalities)))
             body_parts = sorted(list(set(body_parts)))
-        list_information.append({
-            key:value
+            session_list.append({
+                key: value
+                for key, value in zip(
+                    session_header,
+                    [session, acquisition_date_time.date().isoformat(), patient_ages[-1], ""]
+                )
+            })
+
+        session_df = pandas.DataFrame.from_dict(session_list)
+        session_df['acquisition_date_time'] = pandas.to_datetime(session_df['acquisition_date_time'])
+        session_df.sort_values('acquisition_date_time', ascending=False)
+        session_df.to_csv(
+            mids_data_path.joinpath(subject, f"{subject}_sessions.tsv"), sep="\t", index=False
+        )
+        patient_list.append({
+            key: value
             for key, value in zip(
                 participants_header,
                 [subject, modalities, body_parts, str(patient_birthday.date()), patient_ages, patient_sex]
             )
         })
-    print(list_information)
-    pandas.DataFrame.from_dict(list_information).to_csv(
+    print(patient_list)
+    pandas.DataFrame.from_dict(patient_list).to_csv(
         mids_data_path.joinpath("participants.tsv"), sep="\t", index=False
     )
-
